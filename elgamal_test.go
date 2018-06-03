@@ -14,7 +14,7 @@ func Example() {
 	var generator ristretto.Point
 
 	secretKey.Rand() // generate a new secret key
-	generator.Derive([]byte("base point"))
+	generator.Derive([]byte("some base point"))
 	publicKey.ScalarMult(&generator, &secretKey) // compute public key
 
 	// El-Gamal encrypt a random curve point p into a ciphertext-pair (c1,c2)
