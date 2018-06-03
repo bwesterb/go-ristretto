@@ -43,7 +43,12 @@ func (s *Scalar) SetBytes(x *[32]byte) *Scalar {
 	return s.Sub(s, &scL)
 }
 
-// Sets s to a b b.  Returns s.
+// Sets s to -a.  Returns s.
+func (s *Scalar) Neg(a *Scalar) *Scalar {
+	return s.Sub(&scZero, a)
+}
+
+// Sets s to a + b.  Returns s.
 func (s *Scalar) Add(a, b *Scalar) *Scalar {
 	var carry uint16
 	for i := 0; i < 32; i++ {

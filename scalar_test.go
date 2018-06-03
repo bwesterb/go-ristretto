@@ -120,6 +120,20 @@ func TestScInverse(t *testing.T) {
 	}
 }
 
+func TestScNeg(t *testing.T) {
+	var bi1, bi2 big.Int
+	var s1, s2 ristretto.Scalar
+	for i := 0; i < 100; i++ {
+		bi1.Rand(rnd, &biL)
+		bi2.Neg(&bi1)
+		bi2.Mod(&bi2, &biL)
+		s1.SetBigInt(&bi1)
+		if s2.Neg(&s1).BigInt().Cmp(&bi2) != 0 {
+			t.Fatalf("-%v = %v != %v", &bi1, &bi2, &s2)
+		}
+	}
+}
+
 func TestMain(m *testing.M) {
 	biL.SetString(
 		"1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed", 16)
