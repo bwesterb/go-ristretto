@@ -10,6 +10,7 @@ package ristretto
 
 import (
 	"crypto/rand"
+	"crypto/sha512"
 
 	"github.com/bwesterb/go-ristretto/edwards25519"
 )
@@ -87,6 +88,15 @@ func (p *Point) Rand() *Point {
 	var buf [32]byte
 	rand.Read(buf[:])
 	return p.SetElligator(&buf)
+}
+
+// Sets p to the point derived from the buffer using SHA512 and Elligator2.
+// Returns p.
+func (p *Point) Derive(buf []byte) *Point {
+	var ptBuf [32]byte
+	h := sha512.Sum512(buf)
+	copy(ptBuf[:], h[:32])
+	return p.SetElligator(&ptBuf)
 }
 
 func (p *Point) e() *edwards25519.ExtendedPoint {
