@@ -9,6 +9,8 @@
 package ristretto
 
 import (
+	"crypto/rand"
+
 	"github.com/bwesterb/go-ristretto/edwards25519"
 )
 
@@ -24,6 +26,21 @@ func (p *Point) SetZero() *Point {
 // Sets p to q + r.  Returns p.
 func (p *Point) Add(q, r *Point) *Point {
 	p.e().Add(q.e(), r.e())
+	return p
+}
+
+// Sets p to q - r.  Returns p.
+func (p *Point) Sub(q, r *Point) *Point {
+	// TODO optimize
+	var negR Point
+	negR.Neg(r)
+	p.Add(q, &negR)
+	return p
+}
+
+// Sets p to -q.  Returns p.
+func (p *Point) Neg(q *Point) *Point {
+	p.e().Neg(q.e())
 	return p
 }
 
@@ -63,6 +80,13 @@ func (p *Point) SetElligator(buf *[32]byte) *Point {
 func (p *Point) ScalarMult(q *Point, s *Scalar) *Point {
 	p.e().ScalarMult(q.e(), (*[32]uint8)(s))
 	return p
+}
+
+// Sets p to a random point.  Returns p.
+func (p *Point) Rand() *Point {
+	var buf [32]byte
+	rand.Read(buf[:])
+	return p.SetElligator(&buf)
 }
 
 func (p *Point) e() *edwards25519.ExtendedPoint {

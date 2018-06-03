@@ -384,3 +384,12 @@ func (p *ExtendedPoint) ScalarMult(q *ExtendedPoint, s *[32]byte) *ExtendedPoint
 
 	return p
 }
+
+// Sets p to -q.  Returns p.
+func (p *ExtendedPoint) Neg(q *ExtendedPoint) *ExtendedPoint {
+	p.X.Neg(&q.X)
+	p.Y.Set(&q.Y)
+	p.Z.Set(&q.Z)
+	p.T.Neg(&q.T)
+	return p
+}
