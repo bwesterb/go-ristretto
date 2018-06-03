@@ -1,5 +1,5 @@
 `go-ristretto`
---------------
+==============
 
 **Work in progress**
 
@@ -11,3 +11,16 @@ called [Ristretto](https://ristretto.group) proposed by Mike Hamburg.
 
 This is a pure Go implementation of the group operations on the
 Ristretto prime-order group built from Edwards25519.
+
+
+References
+----------
+
+The curve and Ristretto implementation is based on
+[Peter Schwabe](https://cryptojedi.org/peter/index.shtml)'s unpublished PandA
+library --- See `cref/cref.c`.  The field operations borrow
+from [Adam Langley](https://www.imperialviolet.org)'s
+[ed25519](http://github.com/agl/ed25519).
+
+### Other languages
+* [Rust](https://github.com/dalek-cryptography/curve25519-dalek)
