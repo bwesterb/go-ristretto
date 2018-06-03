@@ -1,6 +1,8 @@
 package ristretto
 
 import (
+	"crypto/rand"
+
 	// Requires for FieldElement.[Set]BigInt().  Obviously not used for actual
 	// implementation, as operations on big.Ints are  not constant-time.
 	"math/big"
@@ -886,4 +888,11 @@ func (s *Scalar) SetReduced(t *[64]byte) *Scalar {
 	s[31] = byte(t11 >> 17)
 
 	return s
+}
+
+// Sets s to a random scalar.  Returns s.
+func (s *Scalar) Rand() *Scalar {
+	var buf [64]byte
+	rand.Read(buf[:])
+	return s.SetReduced(&buf)
 }
