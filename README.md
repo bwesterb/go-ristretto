@@ -9,6 +9,7 @@ called [Ristretto](https://ristretto.group) proposed by Mike Hamburg.
 
 This is a pure Go implementation of the group operations on the
 Ristretto prime-order group built from Edwards25519.
+Documentation is on [godoc](https://godoc.org/github.com/bwesterb/go-ristretto).
 
 
 References
