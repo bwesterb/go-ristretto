@@ -59,6 +59,12 @@ func (p *Point) SetElligator(buf *[32]byte) *Point {
 	return p
 }
 
+// Sets p to s * q.  Returns p.
+func (p *Point) ScalarMult(q *Point, s *Scalar) *Point {
+	p.e().ScalarMult(q.e(), (*[32]uint8)(s))
+	return p
+}
+
 func (p *Point) e() *edwards25519.ExtendedPoint {
 	return (*edwards25519.ExtendedPoint)(p)
 }
