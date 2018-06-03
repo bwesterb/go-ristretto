@@ -1,7 +1,5 @@
-`go-ristretto`
-==============
-
-**Work in progress**
+go-ristretto
+============
 
 Many cryptographic schemes need a group of prime order.  Popular and
 efficient elliptic curves like (Edwards25519 of `ed25519` fame) are
@@ -18,9 +16,9 @@ References
 
 The curve and Ristretto implementation is based on
 [Peter Schwabe](https://cryptojedi.org/peter/index.shtml)'s unpublished PandA
-library --- See `cref/cref.c`.  The field operations borrow
+library — see `cref/cref.c`.  The field operations borrow
 from [Adam Langley](https://www.imperialviolet.org)'s
 [ed25519](http://github.com/agl/ed25519).
 
-### Other languages
+### other platforms
 * [Rust](https://github.com/dalek-cryptography/curve25519-dalek)
