@@ -23,7 +23,6 @@
 // 7237005577332262213973186563042994240857116359379907606001950938285454250989.
 // The Scalar type implement the numbers modulo l and also has an API similar
 // to math/big.
-
 package ristretto
 
 import (
