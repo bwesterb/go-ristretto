@@ -21,6 +21,18 @@ var (
 		-120897, -20826367, 7060776, -6093568, 1986012,
 	}
 
+	// (d-1)^2
+	feDMinusOneSquared = FieldElement{
+		15551795, -11097455, -13425098, -10125071, -11896535,
+		10178284, -26634327, 4729244, -5282110, -10116402,
+	}
+
+	// 1 - d^2
+	feOneMinusDSquared = FieldElement{
+		6275446, -16617371, -22938544, -3773710, 11667077,
+		7397348, -27922721, 1766195, -24433858, 672203,
+	}
+
 	epZero = ExtendedPoint{feZero, feOne, feOne, feZero}
 )
 
@@ -90,8 +102,8 @@ func (p *CompletedPoint) SetJacobiQuartic(s, t *FieldElement) *CompletedPoint {
 // Set p to the curvepoint corresponding to r0 via Mike Hamburg's variation
 // on Elligator2 for Ristretto.  Returns p.
 func (p *CompletedPoint) SetRistrettoElligator2(r0 *FieldElement) *CompletedPoint {
-	var r, rPlusD, rPlusOne, ecd2, D, N, ND, sqrt, twiddle, sgn FieldElement
-	var s, t, dMinusOneSquared, rSubOne, r0i, sNeg FieldElement
+	var r, rPlusD, rPlusOne, D, N, ND, sqrt, twiddle, sgn FieldElement
+	var s, t, rSubOne, r0i, sNeg FieldElement
 
 	var b int32
 
@@ -107,11 +119,8 @@ func (p *CompletedPoint) SetRistrettoElligator2(r0 *FieldElement) *CompletedPoin
 	D.Neg(&D)
 
 	// N := -(d^2 - 1)(r + 1)
-	ecd2.Square(&feD)
-	N.sub(&ecd2, &feOne)
-	N.Neg(&N) // TODO add -(d^2-1) as a constant
 	rPlusOne.add(&r, &feOne)
-	N.Mul(&N, &rPlusOne)
+	N.Mul(&feOneMinusDSquared, &rPlusOne)
 
 	// sqrt is the inverse square root of N*D or of i*N*D.
 	// b=1 iff n1 is square.
@@ -132,9 +141,7 @@ func (p *CompletedPoint) SetRistrettoElligator2(r0 *FieldElement) *CompletedPoin
 	t.Neg(&sgn)
 	t.Mul(&sqrt, &t)
 	t.Mul(&s, &t)
-	dMinusOneSquared.sub(&feD, &feOne)
-	dMinusOneSquared.Square(&dMinusOneSquared)
-	t.Mul(&dMinusOneSquared, &t)
+	t.Mul(&feDMinusOneSquared, &t)
 	rSubOne.sub(&r, &feOne)
 	t.Mul(&rSubOne, &t)
 	t.sub(&t, &feOne)
