@@ -78,8 +78,8 @@ func (s *Scalar) Sub(a, b *Scalar) *Scalar {
 
 // Returns s as a big.Int.
 //
-// WARNING Operations on big.Ints are not constant-time: do not use them
-//         for cryptography unless you're sure this is not an issue.
+// Warning: operations on big.Ints are not constant-time: do not use them
+// for cryptography unless you're sure this is not an issue.
 func (s *Scalar) BigInt() *big.Int {
 	var ret big.Int
 	var buf, rBuf [32]byte
@@ -92,8 +92,8 @@ func (s *Scalar) BigInt() *big.Int {
 
 // Sets s to x modulo l.
 //
-// WARNING Operations on big.Ints are not constant-time: do not use them
-//         for cryptography unless you're sure this is not an issue.
+// Warning: operations on big.Ints are not constant-time: do not use them
+// for cryptography unless you're sure this is not an issue.
 func (s *Scalar) SetBigInt(x *big.Int) *Scalar {
 	var v, biL big.Int
 	biL.SetString(
