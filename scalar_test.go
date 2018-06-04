@@ -134,6 +134,26 @@ func TestScNeg(t *testing.T) {
 	}
 }
 
+func TestScReduced(t *testing.T) {
+	var bi1, bi2, bi512 big.Int
+	var s ristretto.Scalar
+	bi512.SetInt64(1).Lsh(&bi512, 512)
+	for i := 0; i < 100; i++ {
+		var rBuf [64]byte
+		bi1.Rand(rnd, &bi512)
+		bi2.Mod(&bi1, &biL)
+		buf := bi1.Bytes()
+		for j := 0; j < len(buf) && j < 64; j++ {
+			rBuf[len(buf)-j-1] = buf[j]
+		}
+		s.SetReduced(&rBuf)
+		if s.BigInt().Cmp(&bi2) != 0 {
+			t.Fatalf("SetReduced(%v) = %v != %v %v", &bi1, &bi2, s.BigInt(), rBuf)
+		}
+	}
+
+}
+
 func TestMain(m *testing.M) {
 	biL.SetString(
 		"1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed", 16)
