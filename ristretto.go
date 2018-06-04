@@ -6,6 +6,24 @@
 // rarely of prime order.  There is, however, a convenient method
 // to construct a prime order group from such curves, using a method
 // called Ristretto proposed by Mike Hamburg.
+//
+// This package implements the Ristretto group constructed from Edwards25519.
+// The Point type represents a group element.  The API mimics that of the
+// math/big package.  For instance, to set c to a+b, one writes
+//
+//     var c ristretto.Point
+//     c.Add(&a, &b) // sets c to a + b
+//
+// Most methods return the receiver, so that function can be chained:
+//
+//     s.Add(&a, &b).Add(&s, &c)  // sets s to a + b + c
+//
+// The order of the Ristretto group is l =
+// 2^252 + 27742317777372353535851937790883648493 =
+// 7237005577332262213973186563042994240857116359379907606001950938285454250989.
+// The Scalar type implement the numbers modulo l and also has an API similar
+// to math/big.
+
 package ristretto
 
 import (
@@ -64,10 +82,9 @@ func (p *Point) SetBytes(buf *[32]byte) bool {
 
 // Sets p to the point corresponding to buf using the Elligator2 encoding.
 //
-// In contrast to SetBytes():
-//   1.  Every input buffer will decode to a point.
-//   2.  SetElligator() is not injective: for every point there are
-//       approximately four buffers that will encode to it.
+// In contrast to SetBytes() (1) Every input buffer will decode to a point
+// and (2) SetElligator() is not injective: for every point there are
+// approximately four buffers that will encode to it.
 func (p *Point) SetElligator(buf *[32]byte) *Point {
 	var fe edwards25519.FieldElement
 	var cp edwards25519.CompletedPoint

@@ -574,7 +574,7 @@ func (s *Scalar) Mul(a, b *Scalar) *Scalar {
 	return s.MulAdd(a, b, &scZero)
 }
 
-// Sets s to t mod l, where t is interpreted little endian.  returns s.
+// Sets s to t mod l, where t is interpreted little endian.  Returns s.
 func (s *Scalar) SetReduced(t *[64]byte) *Scalar {
 	t0 := 0x1FFFFF & load3(t[:])
 	t1 := 0x1FFFFF & (load4(t[2:]) >> 5)
