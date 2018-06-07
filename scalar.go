@@ -2,6 +2,7 @@ package ristretto
 
 import (
 	"crypto/rand"
+	"fmt"
 
 	// Requires for FieldElement.[Set]BigInt().  Obviously not used for actual
 	// implementation, as operations on big.Ints are  not constant-time.
@@ -1113,4 +1114,22 @@ func (s *Scalar) Inverse(t *Scalar) *Scalar {
 	}
 	s.Mul(&t3, &t0)
 	return s
+}
+
+// Implements encoding/BinaryUnmarshaler. Use SetBytes, if convenient, instead.
+func (s *Scalar) UnmarshalBinary(data []byte) error {
+	if len(data) != 32 {
+		return fmt.Errorf("ristretto.Scalar should be 32 bytes; not %d", len(data))
+	}
+	var buf [32]byte
+	copy(buf[:], data)
+	s.SetBytes(&buf)
+	return nil
+}
+
+// Implements encoding/BinaryMarshaler. Use BytesInto, if convenient, instead.
+func (s *Scalar) MarshalBinary() ([]byte, error) {
+	var buf [32]byte
+	s.BytesInto(&buf)
+	return buf[:], nil
 }
