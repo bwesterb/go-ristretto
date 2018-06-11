@@ -49,9 +49,13 @@ fmt.Printf("%v", bytes.Equal(p.Bytes(), p2.Bytes()))
 References
 ----------
 
-The curve and Ristretto implementation is based on
-[Peter Schwabe](https://cryptojedi.org/peter/index.shtml)'s unpublished PandA
-library — see `cref/cref.c`.  The field operations borrow
+The curve and Ristretto implementation is based on the unpublished
+[PandA](https://link.springer.com/chapter/10.1007/978-3-319-04873-4_14)
+library by
+[Chuengsatiansup](https://perso.ens-lyon.fr/chitchanok.chuengsatiansup/),
+[Ribarski](http://panceribarski.com) and
+[Schwabe](https://cryptojedi.org/peter/index.shtml),
+see [cref/cref.c](cref/cref.c).  The field operations borrow
 from [Adam Langley](https://www.imperialviolet.org)'s
 [ed25519](http://github.com/agl/ed25519).
 

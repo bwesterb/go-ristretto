@@ -1,6 +1,7 @@
 // A C implementation of the Ristretto group based on the PandA library
-// by Peter Schwabe, which we use as a reference of our pure Go
-// implementation.
+// by Chuengsatiansup, Ribarski and Schwabe, which we use as a reference
+// of our pure Go implementation.
+// See also https://link.springer.com/chapter/10.1007/978-3-319-04873-4_14
 package cref
 
 // #include "cref.h"
