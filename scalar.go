@@ -2,6 +2,7 @@ package ristretto
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 
 	// Requires for FieldElement.[Set]BigInt().  Obviously not used for actual
@@ -1132,4 +1133,32 @@ func (s *Scalar) MarshalBinary() ([]byte, error) {
 	var buf [32]byte
 	s.BytesInto(&buf)
 	return buf[:], nil
+}
+
+func (s *Scalar) MarshalText() ([]byte, error) {
+	enc := base64.RawURLEncoding
+	var buf [32]byte
+	s.BytesInto(&buf)
+	ret := make([]byte, enc.EncodedLen(32))
+	enc.Encode(ret, buf[:])
+	return ret, nil
+}
+
+func (s *Scalar) UnmarshalText(txt []byte) error {
+	enc := base64.RawURLEncoding
+	var buf [32]byte
+	n, err := enc.Decode(buf[:], txt)
+	if err != nil {
+		return err
+	}
+	if n != 32 {
+		return fmt.Errorf("ristretto.Scalar should be 32 bytes; not %d", n)
+	}
+	s.SetBytes(&buf)
+	return nil
+}
+
+func (s Scalar) String() string {
+	text, _ := s.MarshalText()
+	return string(text)
 }

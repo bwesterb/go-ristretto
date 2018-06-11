@@ -154,6 +154,21 @@ func TestScReduced(t *testing.T) {
 
 }
 
+func TestScTextMarshaling(t *testing.T) {
+	var s, s2 ristretto.Scalar
+	for i := 0; i < 100; i++ {
+		s.Rand()
+		text, _ := s.MarshalText()
+		err := s2.UnmarshalText(text)
+		if err != nil {
+			t.Fatalf("%v: UnmarshalText o MarshalText: %v", s, err)
+		}
+		if s.BigInt().Cmp(s2.BigInt()) != 0 {
+			t.Fatalf("%v: UnmarshalText o MarshalText != id", s)
+		}
+	}
+}
+
 func TestMain(m *testing.M) {
 	biL.SetString(
 		"1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed", 16)
