@@ -34,6 +34,16 @@ var (
 	}
 
 	epZero = ExtendedPoint{feZero, feOne, feOne, feZero}
+
+	epBase = ExtendedPoint{
+		FieldElement{-41032219, -27199451, -7502359, -2800332, -50176896,
+			-33336453, -33570123, -31949908, -53948439, -29257844},
+		FieldElement{20163995, 28827709, 65616271, 30544542, 24400674,
+			29683035, 27175815, 26206403, 10372291, 5663137},
+		feOne,
+		FieldElement{38281802, 6116118, 27349572, 33310069, 58473857,
+			22289538, 47757517, 20140834, 50497352, 6414979},
+	}
 )
 
 // // (X:Y:Z) satisfying x=X/Z, y=Y/Z.  Aka P2.
@@ -58,6 +68,11 @@ func (p *ExtendedPoint) SetZero() *ExtendedPoint {
 	p.Z.SetOne()
 	p.T.SetZero()
 	return p
+}
+
+// Set p to the basepoint (x,4/5) with x>=0.  Returns p
+func (p *ExtendedPoint) SetBase() *ExtendedPoint {
+	return p.Set(&epBase)
 }
 
 // Set p to q.  Returns p.

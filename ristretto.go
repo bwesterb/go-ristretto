@@ -41,6 +41,12 @@ func (p *Point) SetZero() *Point {
 	return p
 }
 
+// Sets p to the Edwards25519 basepoint.  Returns p
+func (p *Point) SetBase() *Point {
+	p.e().SetBase()
+	return p
+}
+
 // Sets p to q + r.  Returns p.
 func (p *Point) Add(q, r *Point) *Point {
 	p.e().Add(q.e(), r.e())
