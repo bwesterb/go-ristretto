@@ -105,6 +105,14 @@ func (p *Point) ScalarMult(q *Point, s *Scalar) *Point {
 	return p
 }
 
+// Sets p to s * B, where B is the edwards25519 basepoint. Returns p.
+func (p *Point) ScalarMultBase(s *Scalar) *Point {
+	// TODO optimize
+	var B Point
+	B.SetBase()
+	return p.ScalarMult(&B, s)
+}
+
 // Sets p to a random point.  Returns p.
 func (p *Point) Rand() *Point {
 	var buf [32]byte
