@@ -532,9 +532,11 @@ func (fe *FieldElement) IsNonZeroI() int32 {
 	var ret uint8
 	var buf [32]byte
 	fe.BytesInto(&buf)
-	for _, b := range buf {
-		ret |= b
-	}
+	ret = (buf[0] | buf[1] | buf[2] | buf[3] | buf[4] | buf[5] | buf[6] |
+		buf[7] | buf[8] | buf[9] | buf[10] | buf[11] | buf[12] | buf[13] |
+		buf[14] | buf[15] | buf[16] | buf[17] | buf[18] | buf[19] | buf[20] |
+		buf[21] | buf[22] | buf[23] | buf[24] | buf[25] | buf[26] | buf[27] |
+		buf[28] | buf[29] | buf[30] | buf[31])
 	ret |= ret >> 4
 	ret |= ret >> 2
 	ret |= ret >> 1

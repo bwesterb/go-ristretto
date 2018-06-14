@@ -122,6 +122,35 @@ func BenchmarkFeMul(b *testing.B) {
 	}
 }
 
+func BenchmarkFeIsNonZero(b *testing.B) {
+	var fe edwards25519.FieldElement
+	var bi big.Int
+	bi.Rand(rnd, &bi25519)
+	fe.SetBigInt(&bi)
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		fe.IsNonZeroI()
+	}
+}
+
+func BenchmarkFePack(b *testing.B) {
+	var fe edwards25519.FieldElement
+	var buf [32]byte
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		fe.BytesInto(&buf)
+	}
+}
+
+func BenchmarkFeUnpack(b *testing.B) {
+	var fe edwards25519.FieldElement
+	var buf [32]byte
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		fe.SetBytes(&buf)
+	}
+}
+
 func BenchmarkFeInvSqrtI(b *testing.B) {
 	var fe edwards25519.FieldElement
 	var bi big.Int
