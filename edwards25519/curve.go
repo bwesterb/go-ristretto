@@ -61,6 +61,33 @@ type CompletedPoint struct {
 	X, Y, Z, T FieldElement
 }
 
+// Set p to (-i,0), a point Ristretto-equivalent to 0.  Returns p.
+func (p *ExtendedPoint) SetTorsion3() *ExtendedPoint {
+	p.X.Set(&feMinusI)
+	p.Y.SetZero()
+	p.Z.Set(&feMinusI)
+	p.T.SetZero()
+	return p
+}
+
+// Set p to (i,0), a point Ristretto-equivalent to 0.  Returns p.
+func (p *ExtendedPoint) SetTorsion2() *ExtendedPoint {
+	p.X.Set(&feI)
+	p.Y.SetZero()
+	p.Z.Set(&feI)
+	p.T.SetZero()
+	return p
+}
+
+// Set p to (0,-1), a point Ristretto-equivalent to 0.  Returns p.
+func (p *ExtendedPoint) SetTorsion1() *ExtendedPoint {
+	p.X.SetZero()
+	p.Y.Set(&feMinusOne)
+	p.Z.Set(&feMinusOne)
+	p.T.SetZero()
+	return p
+}
+
 // Set p to zero, the neutral element.  Return p.
 func (p *ExtendedPoint) SetZero() *ExtendedPoint {
 	p.X.SetZero()
@@ -414,4 +441,15 @@ func (p *ExtendedPoint) Neg(q *ExtendedPoint) *ExtendedPoint {
 	p.Z.Set(&q.Z)
 	p.T.Neg(&q.T)
 	return p
+}
+
+// Returns 1 if p and q are in the same Ristretto equivalence class.
+// Assumes p and q are both even.
+func (p *ExtendedPoint) RistrettoEqualsI(q *ExtendedPoint) int32 {
+	var x1y2, x2y1, x1x2, y1y2 FieldElement
+	x1y2.Mul(&p.X, &q.Y)
+	x2y1.Mul(&q.X, &p.Y)
+	x1x2.Mul(&p.X, &q.X)
+	y1y2.Mul(&p.Y, &q.Y)
+	return 1 - ((1 - x1y2.EqualsI(&x2y1)) & (1 - x1x2.EqualsI(&y1y2)))
 }

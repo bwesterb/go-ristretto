@@ -129,6 +129,16 @@ func (p *Point) Derive(buf []byte) *Point {
 	return p.SetElligator(&ptBuf)
 }
 
+// Returns 1 if p == q and 0 otherwise.
+func (p *Point) EqualsI(q *Point) int32 {
+	return p.e().RistrettoEqualsI(q.e())
+}
+
+// Returns whether p == q
+func (p *Point) Equals(q *Point) bool {
+	return p.EqualsI(q) == 1
+}
+
 func (p *Point) e() *edwards25519.ExtendedPoint {
 	return (*edwards25519.ExtendedPoint)(p)
 }

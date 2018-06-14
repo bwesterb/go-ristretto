@@ -150,6 +150,30 @@ func TestScalarMult(t *testing.T) {
 	}
 }
 
+func TestRistrettoEqualsI(t *testing.T) {
+	var ep1, ep2 edwards25519.ExtendedPoint
+	var torsion [4]edwards25519.ExtendedPoint
+	var fe edwards25519.FieldElement
+	var cp edwards25519.CompletedPoint
+	var buf [32]byte
+	torsion[0].SetZero()
+	torsion[1].SetTorsion1()
+	torsion[2].SetTorsion2()
+	torsion[3].SetTorsion3()
+	for i := 0; i < 1000; i++ {
+		rnd.Read(buf[:])
+		fe.SetBytes(&buf)
+		cp.SetRistrettoElligator2(&fe)
+		ep1.SetCompleted(&cp)
+		for j := 0; j < 4; j++ {
+			ep2.Add(&ep1, &torsion[j])
+			if ep1.RistrettoEqualsI(&ep2) != 1 {
+				t.Fatalf("%v + %v != %v", ep1, torsion[j], ep2)
+			}
+		}
+	}
+}
+
 func BenchmarkElligator(b *testing.B) {
 	var fe edwards25519.FieldElement
 	var cp edwards25519.CompletedPoint
