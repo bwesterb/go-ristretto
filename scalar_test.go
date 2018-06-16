@@ -88,6 +88,21 @@ func TestScMul(t *testing.T) {
 	}
 }
 
+func TestScSquare(t *testing.T) {
+	var bi1, bi2 big.Int
+	var s1, s2 ristretto.Scalar
+	for i := 0; i < 100; i++ {
+		bi1.Rand(rnd, &biL)
+		bi2.Mul(&bi1, &bi1)
+		bi2.Mod(&bi2, &biL)
+		s1.SetBigInt(&bi1)
+		if s2.Square(&s1).BigInt().Cmp(&bi2) != 0 {
+			t.Fatalf("%v^2 = %v != %v",
+				&bi1, &bi2, s2.BigInt())
+		}
+	}
+}
+
 func TestScMulAdd(t *testing.T) {
 	var bi1, bi2, bi3, bi4 big.Int
 	var s1, s2, s3, s4 ristretto.Scalar
@@ -209,6 +224,13 @@ func BenchmarkScSquare(b *testing.B) {
 	var s ristretto.Scalar
 	for n := 0; n < b.N; n++ {
 		s.Square(&s)
+	}
+}
+
+func BenchmarkScInverse(b *testing.B) {
+	var s ristretto.Scalar
+	for n := 0; n < b.N; n++ {
+		s.Inverse(&s)
 	}
 }
 
