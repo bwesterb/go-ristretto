@@ -1117,6 +1117,32 @@ func (s *Scalar) Inverse(t *Scalar) *Scalar {
 	return s
 }
 
+// IsNonZeroI returns 1 if s is non-zero and 0 otherwise.
+func (s *Scalar) IsNonZeroI() int32 {
+	var ret uint8
+	ret = (s[0] | s[1] | s[2] | s[3] | s[4] | s[5] | s[6] |
+		s[7] | s[8] | s[9] | s[10] | s[11] | s[12] | s[13] |
+		s[14] | s[15] | s[16] | s[17] | s[18] | s[19] | s[20] |
+		s[21] | s[22] | s[23] | s[24] | s[25] | s[26] | s[27] |
+		s[28] | s[29] | s[30] | s[31])
+	ret |= ret >> 4
+	ret |= ret >> 2
+	ret |= ret >> 1
+	return int32(ret & 1)
+}
+
+// EqualsI returns 1 if s is equal to a, otherwise 0.
+func (s *Scalar) EqualsI(a *Scalar) int32 {
+	var b Scalar
+	return 1 - b.Sub(s, a).IsNonZeroI()
+}
+
+// Equals returns whether s is equal to a.
+func (s *Scalar) Equals(a *Scalar) bool {
+	var b Scalar
+	return b.Sub(s, a).IsNonZeroI() == 0
+}
+
 // Implements encoding/BinaryUnmarshaler. Use SetBytes, if convenient, instead.
 func (s *Scalar) UnmarshalBinary(data []byte) error {
 	if len(data) != 32 {
