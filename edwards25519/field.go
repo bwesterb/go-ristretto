@@ -468,9 +468,7 @@ func (fe *FieldElement) Inverse(a *FieldElement) *FieldElement {
 
 	t0.Square(a)
 	t1.Square(&t0)
-	for i = 1; i < 2; i++ {
-		t1.Square(&t1)
-	}
+	t1.Square(&t1)
 	t1.Mul(a, &t1)
 	t0.Mul(&t0, &t1)
 	t2.Square(&t0)
