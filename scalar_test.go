@@ -198,6 +198,20 @@ func BenchmarkScRand(b *testing.B) {
 	}
 }
 
+func BenchmarkScMul(b *testing.B) {
+	var s, t ristretto.Scalar
+	for n := 0; n < b.N; n++ {
+		s.Mul(&s, &t)
+	}
+}
+
+func BenchmarkScSquare(b *testing.B) {
+	var s ristretto.Scalar
+	for n := 0; n < b.N; n++ {
+		s.Square(&s)
+	}
+}
+
 func TestMain(m *testing.M) {
 	biL.SetString(
 		"1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed", 16)
