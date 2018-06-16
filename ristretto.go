@@ -55,10 +55,7 @@ func (p *Point) Add(q, r *Point) *Point {
 
 // Sets p to q - r.  Returns p.
 func (p *Point) Sub(q, r *Point) *Point {
-	// TODO optimize
-	var negR Point
-	negR.Neg(r)
-	p.Add(q, &negR)
+	p.e().Sub(q.e(), r.e())
 	return p
 }
 

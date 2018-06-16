@@ -78,6 +78,42 @@ func TestPointDouble(t *testing.T) {
 	}
 }
 
+func TestPointSub(t *testing.T) {
+	var buf1, buf2, cBuf, goBuf [32]byte
+	var fe1, fe2 edwards25519.FieldElement
+	var cp1, cp2 edwards25519.CompletedPoint
+	var ep1, ep2, ep3 edwards25519.ExtendedPoint
+
+	var cFe1, cFe2 cref.Fe25519
+	var cP1, cP2, cP3 cref.GroupGe
+
+	for i := 0; i < 1000; i++ {
+		rnd.Read(buf1[:])
+		rnd.Read(buf2[:])
+
+		cFe1.Unpack(&buf1)
+		cFe2.Unpack(&buf2)
+		cP1.Elligator(&cFe1)
+		cP2.Elligator(&cFe2)
+		cP2.Neg(&cP2)
+		cP3.Add(&cP1, &cP2)
+		cP3.Pack(&cBuf)
+
+		fe1.SetBytes(&buf1)
+		fe2.SetBytes(&buf2)
+		cp1.SetRistrettoElligator2(&fe1)
+		cp2.SetRistrettoElligator2(&fe2)
+		ep1.SetCompleted(&cp1)
+		ep2.SetCompleted(&cp2)
+		ep3.Sub(&ep1, &ep2)
+		ep3.RistrettoInto(&goBuf)
+
+		if !bytes.Equal(cBuf[:], goBuf[:]) {
+			t.Fatalf("%v - %v = %v != %v", ep1, ep2, ep3, cP3)
+		}
+	}
+}
+
 func TestPointAdd(t *testing.T) {
 	var buf1, buf2, cBuf, goBuf [32]byte
 	var fe1, fe2 edwards25519.FieldElement

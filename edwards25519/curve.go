@@ -215,6 +215,28 @@ func (p *CompletedPoint) AddExtended(q, r *ExtendedPoint) *CompletedPoint {
 	return p
 }
 
+// Sets p to q-r.  Returns p
+func (p *CompletedPoint) SubExtended(q, r *ExtendedPoint) *CompletedPoint {
+	var a, b, c, d, t FieldElement
+
+	a.sub(&q.Y, &q.X)
+	t.add(&r.Y, &r.X)
+	a.Mul(&a, &t)
+	b.add(&q.X, &q.Y)
+	t.sub(&r.Y, &r.X)
+	b.Mul(&b, &t)
+	c.Mul(&q.T, &r.T)
+	c.Mul(&c, &fe2D)
+	d.Mul(&q.Z, &r.Z)
+	d.add(&d, &d)
+	p.X.sub(&b, &a)
+	p.T.add(&d, &c)
+	p.Z.sub(&d, &c)
+	p.Y.add(&b, &a)
+
+	return p
+}
+
 // Set p to 2 * q.  Returns p.
 func (p *CompletedPoint) DoubleExtended(q *ExtendedPoint) *CompletedPoint {
 	var a, b, c, d FieldElement
@@ -246,6 +268,14 @@ func (p *ExtendedPoint) Double(q *ExtendedPoint) *ExtendedPoint {
 func (p *ExtendedPoint) Add(q, r *ExtendedPoint) *ExtendedPoint {
 	var tmp CompletedPoint
 	tmp.AddExtended(q, r)
+	p.SetCompleted(&tmp)
+	return p
+}
+
+// Set p to q - r. Returns p.
+func (p *ExtendedPoint) Sub(q, r *ExtendedPoint) *ExtendedPoint {
+	var tmp CompletedPoint
+	tmp.SubExtended(q, r)
 	p.SetCompleted(&tmp)
 	return p
 }

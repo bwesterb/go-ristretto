@@ -39,6 +39,10 @@ func (g *GroupGe) Elligator(r0 *Fe25519) {
 	C.group_ge_elligator(g.c(), r0.c())
 }
 
+func (g *GroupGe) Neg(x *GroupGe) {
+	C.group_ge_negate(g.c(), x.c())
+}
+
 func (g *GroupGe) Add(x, y *GroupGe) {
 	C.group_ge_add(g.c(), x.c(), y.c())
 }
