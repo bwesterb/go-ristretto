@@ -2,6 +2,7 @@ package ristretto
 
 import (
 	"crypto/rand"
+	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
 
@@ -35,6 +36,13 @@ var (
 func (s *Scalar) BytesInto(buf *[32]byte) *Scalar {
 	copy(buf[:], s[:])
 	return s
+}
+
+// Bytes() returns a little-endian packed version of s.  See also BytesInto().
+func (s *Scalar) Bytes() []byte {
+	var ret [32]byte
+	s.BytesInto(&ret)
+	return ret[:]
 }
 
 // Sets s to x mod l, where x is interpreted little endian and the
@@ -574,6 +582,15 @@ func (s *Scalar) MulAdd(a, b, c *Scalar) *Scalar {
 // Sets s to a * b.  Returns s.
 func (s *Scalar) Mul(a, b *Scalar) *Scalar {
 	return s.MulAdd(a, b, &scZero)
+}
+
+// Derive sets s to the scalar derived from the given buffer using SHA512 and
+// Scalar.SetReduced()  Returns s.
+func (s *Scalar) Derive(buf []byte) *Scalar {
+	var sBuf [64]byte
+	h := sha512.Sum512(buf)
+	copy(sBuf[:], h[:])
+	return s.SetReduced(&sBuf)
 }
 
 // Sets s to t mod l, where t is interpreted little endian.  Returns s.

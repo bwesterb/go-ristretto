@@ -1,6 +1,7 @@
 package ristretto_test
 
 import (
+	"encoding/hex"
 	"math/big"
 	"math/rand"
 	"os"
@@ -166,6 +167,34 @@ func TestScTextMarshaling(t *testing.T) {
 		if s.BigInt().Cmp(s2.BigInt()) != 0 {
 			t.Fatalf("%v: UnmarshalText o MarshalText != id", s)
 		}
+	}
+}
+
+func TestScDerive(t *testing.T) {
+	var s ristretto.Scalar
+	for k, v := range map[string]string{
+		"test1":     "f4f2ba0eccc056c32241b5e7f648ffe6bf870773e09104f0fd2c28fbd7fc5402",
+		"ristretto": "a17454b11da0ee4f9aed08190c61781c326a0c59bb449133bacc0c75308db805",
+		"decaf":     "8107e19264d3e54e9869de056c90dc245dbc097529c4a5ef0dae42e1f3cd7700",
+	} {
+		v2 := hex.EncodeToString(s.Derive([]byte(k)).Bytes())
+		if v != v2 {
+			t.Fatalf("Derive(%s) = %s != %s", k, v, v2)
+		}
+	}
+}
+
+func BenchmarkScDerive(b *testing.B) {
+	var s ristretto.Scalar
+	for n := 0; n < b.N; n++ {
+		s.Derive([]byte("test"))
+	}
+}
+
+func BenchmarkScRand(b *testing.B) {
+	var s ristretto.Scalar
+	for n := 0; n < b.N; n++ {
+		s.Rand()
 	}
 }
 
