@@ -57,6 +57,52 @@ func TestFeMul(t *testing.T) {
 	}
 }
 
+func TestFeSquare(t *testing.T) {
+	var bi1, bi2 big.Int
+	var fe1, fe2 edwards25519.FieldElement
+	for i := 0; i < 100; i++ {
+		bi1.Rand(rnd, &bi25519)
+		bi2.Mul(&bi1, &bi1)
+		bi2.Mod(&bi2, &bi25519)
+		fe1.SetBigInt(&bi1)
+		if fe2.Square(&fe1).BigInt().Cmp(&bi2) != 0 {
+			t.Fatalf("%v^2 = %v != %v", &bi1, &bi2, &fe2)
+		}
+	}
+}
+
+func TestFeSub(t *testing.T) {
+	var bi1, bi2, bi3 big.Int
+	var fe1, fe2, fe3 edwards25519.FieldElement
+	for i := 0; i < 100; i++ {
+		bi1.Rand(rnd, &bi25519)
+		bi2.Rand(rnd, &bi25519)
+		bi3.Sub(&bi1, &bi2)
+		bi3.Mod(&bi3, &bi25519)
+		fe1.SetBigInt(&bi1)
+		fe2.SetBigInt(&bi2)
+		if fe3.Sub(&fe1, &fe2).BigInt().Cmp(&bi3) != 0 {
+			t.Fatalf("%v - %v = %v != %v", &bi1, &bi2, &bi3, &fe3)
+		}
+	}
+}
+
+func TestFeAdd(t *testing.T) {
+	var bi1, bi2, bi3 big.Int
+	var fe1, fe2, fe3 edwards25519.FieldElement
+	for i := 0; i < 100; i++ {
+		bi1.Rand(rnd, &bi25519)
+		bi2.Rand(rnd, &bi25519)
+		bi3.Add(&bi1, &bi2)
+		bi3.Mod(&bi3, &bi25519)
+		fe1.SetBigInt(&bi1)
+		fe2.SetBigInt(&bi2)
+		if fe3.Add(&fe1, &fe2).BigInt().Cmp(&bi3) != 0 {
+			t.Fatalf("%v + %v = %v != %v", &bi1, &bi2, &bi3, &fe3)
+		}
+	}
+}
+
 func TestFeInverse(t *testing.T) {
 	var bi1, bi2 big.Int
 	var fe1, fe2 edwards25519.FieldElement

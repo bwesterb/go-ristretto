@@ -55,9 +55,14 @@ library by
 [Chuengsatiansup](https://perso.ens-lyon.fr/chitchanok.chuengsatiansup/),
 [Ribarski](http://panceribarski.com) and
 [Schwabe](https://cryptojedi.org/peter/index.shtml),
-see [cref/cref.c](cref/cref.c).  The field operations borrow
+see [cref/cref.c](cref/cref.c).  The generic field operations borrow
 from [Adam Langley](https://www.imperialviolet.org)'s
 [ed25519](http://github.com/agl/ed25519).
+The amd64 optimized field arithmetic are from George Tankersley's
+[ed25519 patch](https://go-review.googlesource.com/c/crypto/+/71950),
+which in turn is based on SUPERCOP's
+[amd64-51-30k](https://github.com/floodyberry/supercop/tree/master/crypto_sign/ed25519/amd64-51-30k)
+by Bernstein, Duif, Lange, Schwabe and Yang.
 
 ### other platforms
 * [Rust](https://github.com/dalek-cryptography/curve25519-dalek)

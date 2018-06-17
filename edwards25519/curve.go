@@ -2,55 +2,6 @@
 // Ristretto group is a subquotient.
 package edwards25519
 
-var (
-	// parameter d of Edwards25519
-	feD = FieldElement{
-		-10913610, 13857413, -15372611, 6949391, 114729,
-		-8787816, -6275908, -3247719, -18696448, -12055116,
-	}
-
-	// double feD
-	fe2D = FieldElement{
-		-21827239, -5839606, -30745221, 13898782, 229458,
-		15978800, -12551817, -6495438, 29715968, 9444199,
-	}
-
-	// 1 / sqrt(-1-d)
-	feInvSqrtMinusDMinusOne = FieldElement{
-		-6111485, -4156064, 27798727, -12243468, 25904040,
-		-120897, -20826367, 7060776, -6093568, 1986012,
-	}
-
-	// (d-1)^2
-	feDMinusOneSquared = FieldElement{
-		15551795, -11097455, -13425098, -10125071, -11896535,
-		10178284, -26634327, 4729244, -5282110, -10116402,
-	}
-
-	// 1 - d^2
-	feOneMinusDSquared = FieldElement{
-		6275446, -16617371, -22938544, -3773710, 11667077,
-		7397348, -27922721, 1766195, -24433858, 672203,
-	}
-
-	epZero = ExtendedPoint{feZero, feOne, feOne, feZero}
-
-	epBase = ExtendedPoint{
-		FieldElement{-41032219, -27199451, -7502359, -2800332, -50176896,
-			-33336453, -33570123, -31949908, -53948439, -29257844},
-		FieldElement{20163995, 28827709, 65616271, 30544542, 24400674,
-			29683035, 27175815, 26206403, 10372291, 5663137},
-		feOne,
-		FieldElement{38281802, 6116118, 27349572, 33310069, 58473857,
-			22289538, 47757517, 20140834, 50497352, 6414979},
-	}
-)
-
-// // (X:Y:Z) satisfying x=X/Z, y=Y/Z.  Aka P2.
-// type ProjectivePoint struct {
-// 	X, Y, Z FieldElement
-// }
-
 // (X:Y:Z:T) satisfying x=X/Z, y=Y/Z, X*Y=Z*T.  Aka P3.
 type ExtendedPoint struct {
 	X, Y, Z, T FieldElement
@@ -167,6 +118,7 @@ func (p *CompletedPoint) SetRistrettoElligator2(r0 *FieldElement) *CompletedPoin
 	// sqrt is the inverse square root of N*D or of i*N*D.
 	// b=1 iff n1 is square.
 	ND.Mul(&N, &D)
+
 	b = sqrt.InvSqrtI(&ND)
 	sqrt.Abs(&sqrt)
 
