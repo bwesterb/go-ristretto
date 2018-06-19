@@ -28,6 +28,9 @@ package ristretto
 import (
 	"crypto/rand"
 	"crypto/sha512"
+	"encoding/base64"
+	"errors"
+	"fmt"
 
 	"github.com/bwesterb/go-ristretto/edwards25519"
 )
@@ -140,6 +143,56 @@ func (p *Point) EqualsI(q *Point) int32 {
 // Returns whether p == q
 func (p *Point) Equals(q *Point) bool {
 	return p.EqualsI(q) == 1
+}
+
+// Implements encoding/BinaryUnmarshaler. Use SetBytes, if convenient, instead.
+func (p *Point) UnmarshalBinary(data []byte) error {
+	if len(data) != 32 {
+		return fmt.Errorf("ristretto.Point should be 32 bytes; not %d", len(data))
+	}
+	var buf [32]byte
+	copy(buf[:], data)
+	if !p.SetBytes(&buf) {
+		return errors.New("Buffer does not encode a ristretto.Point")
+	}
+	return nil
+}
+
+// Implements encoding/BinaryMarshaler. Use BytesInto, if convenient, instead.
+func (p *Point) MarshalBinary() ([]byte, error) {
+	var buf [32]byte
+	p.BytesInto(&buf)
+	return buf[:], nil
+}
+
+func (p *Point) MarshalText() ([]byte, error) {
+	enc := base64.RawURLEncoding
+	var buf [32]byte
+	p.BytesInto(&buf)
+	ret := make([]byte, enc.EncodedLen(32))
+	enc.Encode(ret, buf[:])
+	return ret, nil
+}
+
+func (p *Point) UnmarshalText(txt []byte) error {
+	enc := base64.RawURLEncoding
+	var buf [32]byte
+	n, err := enc.Decode(buf[:], txt)
+	if err != nil {
+		return err
+	}
+	if n != 32 {
+		return fmt.Errorf("ristretto.Point should be 32 bytes; not %d", n)
+	}
+	if !p.SetBytes(&buf) {
+		return errors.New("Buffer does not encode a ristretto.Point")
+	}
+	return nil
+}
+
+func (p Point) String() string {
+	text, _ := p.MarshalText()
+	return string(text)
 }
 
 func (p *Point) e() *edwards25519.ExtendedPoint {
