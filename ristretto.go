@@ -47,6 +47,12 @@ func (p *Point) SetBase() *Point {
 	return p
 }
 
+// Sets p to q.  Returns p
+func (p *Point) Set(q *Point) *Point {
+	p.e().Set(q.e())
+	return p
+}
+
 // Sets p to q + r.  Returns p.
 func (p *Point) Add(q, r *Point) *Point {
 	p.e().Add(q.e(), r.e())
