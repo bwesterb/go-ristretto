@@ -145,6 +145,31 @@ func (p *Point) Equals(q *Point) bool {
 	return p.EqualsI(q) == 1
 }
 
+// HashToPoint constructs a RistrettoPoint from the byte slice
+// SHA512 is used to convert it to 64 bytes of data
+// The elligator is applied to the first 32 bytes and the second 32 bytes to form points A1, A2
+// then A1, A2 are added to ensure a uniform distribution
+// The sum is then returned
+func (p *Point) HashToPoint(data []byte) *Point {
+
+	hash := sha512.Sum512(data)
+
+	var pt Point
+	var pt2 Point
+
+	var A [32]byte
+	var B [32]byte
+
+	copy(A[:], hash[:32])
+	copy(B[:], hash[32:])
+
+	pt.SetElligator(&A)
+	pt2.SetElligator(&B)
+
+	p.Add(&pt, &pt2)
+	return p
+}
+
 // Implements encoding/BinaryUnmarshaler. Use SetBytes, if convenient, instead.
 func (p *Point) UnmarshalBinary(data []byte) error {
 	if len(data) != 32 {
