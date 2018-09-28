@@ -128,6 +128,10 @@ func (p *Point) Rand() *Point {
 
 // Sets p to the point derived from the buffer using SHA512 and Elligator2.
 // Returns p.
+//
+// NOTE curve25519-dalek uses a different (more conservative) method to derive
+// a point from raw data with a hash.  This is implemented in
+// Point.DeriveDalek().
 func (p *Point) Derive(buf []byte) *Point {
 	var ptBuf [32]byte
 	h := sha512.Sum512(buf)
@@ -145,28 +149,20 @@ func (p *Point) Equals(q *Point) bool {
 	return p.EqualsI(q) == 1
 }
 
-// HashToPoint constructs a RistrettoPoint from the byte slice
-// SHA512 is used to convert it to 64 bytes of data
-// The elligator is applied to the first 32 bytes and the second 32 bytes to form points A1, A2
-// then A1, A2 are added to ensure a uniform distribution
-// The sum is then returned
-func (p *Point) HashToPoint(data []byte) *Point {
-
+// Sets p to the point derived from the buffer using SHA512 and Elligator2
+// in the fashion of curve25519-dalek.
+//
+// NOTE See also Derive(), which is a different method which is twice as fast,
+// but which might not be as secure as this method.
+func (p *Point) DeriveDalek(data []byte) *Point {
 	hash := sha512.Sum512(data)
-
-	var pt Point
-	var pt2 Point
-
-	var A [32]byte
-	var B [32]byte
-
-	copy(A[:], hash[:32])
-	copy(B[:], hash[32:])
-
-	pt.SetElligator(&A)
-	pt2.SetElligator(&B)
-
-	p.Add(&pt, &pt2)
+	var p2 Point
+	var buf [32]byte
+	copy(buf[:], hash[:32])
+	p.SetElligator(&buf)
+	copy(buf[:], hash[32:])
+	p2.SetElligator(&buf)
+	p.Add(p, &p2)
 	return p
 }
 
