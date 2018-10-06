@@ -38,6 +38,9 @@ import (
 // Represents an element of the Ristretto group over Edwards25519.
 type Point edwards25519.ExtendedPoint
 
+// A table to speed up scalar multiplication of a fixed point
+type ScalarMultTable edwards25519.ScalarMultTable
+
 // Sets p to zero (the neutral element).  Returns p.
 func (p *Point) SetZero() *Point {
 	p.e().SetZero()
@@ -105,6 +108,13 @@ func (p *Point) SetElligator(buf *[32]byte) *Point {
 	return p
 }
 
+// Sets p to s * q, where q is the point for which the table t was
+// computed. Returns p.
+func (p *Point) ScalarMultTable(t *ScalarMultTable, s *Scalar) *Point {
+	t.t().ScalarMult(p.e(), (*[32]uint8)(s))
+	return p
+}
+
 // Sets p to s * q.  Returns p.
 func (p *Point) ScalarMult(q *Point, s *Scalar) *Point {
 	p.e().ScalarMult(q.e(), (*[32]uint8)(s))
@@ -113,10 +123,8 @@ func (p *Point) ScalarMult(q *Point, s *Scalar) *Point {
 
 // Sets p to s * B, where B is the edwards25519 basepoint. Returns p.
 func (p *Point) ScalarMultBase(s *Scalar) *Point {
-	// TODO optimize
-	var B Point
-	B.SetBase()
-	return p.ScalarMult(&B, s)
+	edwards25519.BaseScalarMultTable.ScalarMult(p.e(), (*[32]uint8)(s))
+	return p
 }
 
 // Sets p to a random point.  Returns p.
@@ -218,4 +226,13 @@ func (p Point) String() string {
 
 func (p *Point) e() *edwards25519.ExtendedPoint {
 	return (*edwards25519.ExtendedPoint)(p)
+}
+
+func (t *ScalarMultTable) t() *edwards25519.ScalarMultTable {
+	return (*edwards25519.ScalarMultTable)(t)
+}
+
+// Fills the table for point p.
+func (t *ScalarMultTable) Compute(p *Point) {
+	t.t().Compute(p.e())
 }

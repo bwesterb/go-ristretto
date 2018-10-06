@@ -380,7 +380,7 @@ func (p *ExtendedPoint) ScalarMult(q *ExtendedPoint, s *[32]byte) *ExtendedPoint
 	var t ExtendedPoint
 	var window [51]int8
 
-	// Precomputations.  TODO expose an API for such precomputations
+	// Precomputations.
 	computeScalarWindow5(s, &window)
 	lut[0].SetZero()
 	lut[1].Set(q)

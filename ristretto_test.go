@@ -103,3 +103,18 @@ func TestRistretto255TestVectors(t *testing.T) {
 		}
 	}
 }
+
+// Test base point multiplication
+func TestBasePointMultiples(t *testing.T) {
+	var s ristretto.Scalar
+	var p1, p2, B ristretto.Point
+	B.SetBase()
+	for i := 0; i < 1000; i++ {
+		s.Rand()
+		p1.ScalarMultBase(&s)
+		p2.ScalarMult(&B, &s)
+		if !p1.Equals(&p2) {
+			t.Fatalf("[%v]B = %v != %v", s, p2, p1)
+		}
+	}
+}

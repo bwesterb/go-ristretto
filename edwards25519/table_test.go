@@ -72,3 +72,13 @@ func TestTableBaseScalarMult(t *testing.T) {
 		}
 	}
 }
+
+func TestBaseScalarMultTable(t *testing.T) {
+	var table edwards25519.ScalarMultTable
+	var B edwards25519.ExtendedPoint
+	B.SetBase()
+	table.Compute(&B)
+	if edwards25519.BaseScalarMultTable != table {
+		t.Fatalf("BaseScalarMultTable has incorrect values")
+	}
+}
