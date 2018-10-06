@@ -12,6 +12,11 @@ type CompletedPoint struct {
 	X, Y, Z, T FieldElement
 }
 
+// (X:Y:Z) satisfying x=X/Z, y=Y/Z.
+type ProjectivePoint struct {
+	X, Y, Z FieldElement
+}
+
 // Set p to (-i,0), a point Ristretto-equivalent to 0.  Returns p.
 func (p *ExtendedPoint) SetTorsion3() *ExtendedPoint {
 	p.X.Set(&feMinusI)
@@ -36,6 +41,14 @@ func (p *ExtendedPoint) SetTorsion1() *ExtendedPoint {
 	p.Y.Set(&feMinusOne)
 	p.Z.Set(&feMinusOne)
 	p.T.SetZero()
+	return p
+}
+
+// Set p to zero, the neutral element.  Return p.
+func (p *ProjectivePoint) SetZero() *ProjectivePoint {
+	p.X.SetZero()
+	p.Y.SetOne()
+	p.Z.SetOne()
 	return p
 }
 
@@ -190,6 +203,23 @@ func (p *CompletedPoint) SubExtended(q, r *ExtendedPoint) *CompletedPoint {
 }
 
 // Set p to 2 * q.  Returns p.
+func (p *CompletedPoint) DoubleProjective(q *ProjectivePoint) *CompletedPoint {
+	var t0 FieldElement
+
+	p.X.Square(&q.X)
+	p.Z.Square(&q.Y)
+	p.T.DoubledSquare(&q.Z)
+	p.Y.add(&q.X, &q.Y)
+	t0.Square(&p.Y)
+	p.Y.add(&p.Z, &p.X)
+	p.Z.sub(&p.Z, &p.X)
+	p.X.sub(&t0, &p.Y)
+	p.T.sub(&p.T, &p.Z)
+
+	return p
+}
+
+// Set p to 2 * q.  Returns p.
 func (p *CompletedPoint) DoubleExtended(q *ExtendedPoint) *CompletedPoint {
 	var a, b, c, d FieldElement
 
@@ -205,6 +235,22 @@ func (p *CompletedPoint) DoubleExtended(q *ExtendedPoint) *CompletedPoint {
 	p.T.sub(&p.Z, &c)
 	p.Y.sub(&d, &b)
 
+	return p
+}
+
+// Set p to q.  Returns p.
+func (p *ProjectivePoint) SetExtended(q *ExtendedPoint) *ProjectivePoint {
+	p.X.Set(&q.X)
+	p.Y.Set(&q.Y)
+	p.Z.Set(&q.Z)
+	return p
+}
+
+// Set p to q.  Returns p.
+func (p *ProjectivePoint) SetCompleted(q *CompletedPoint) *ProjectivePoint {
+	p.X.Mul(&q.X, &q.T)
+	p.Y.Mul(&q.Y, &q.Z)
+	p.Z.Mul(&q.Z, &q.T)
 	return p
 }
 
@@ -393,9 +439,14 @@ func (p *ExtendedPoint) ScalarMult(q *ExtendedPoint, s *[32]byte) *ExtendedPoint
 	// Compute!
 	p.SetZero()
 	for i := 50; i >= 0; i-- {
-		for j := 0; j < 5; j++ {
-			p.Double(p)
+		var pp ProjectivePoint
+		var cp CompletedPoint
+		cp.DoubleExtended(p)
+		for z := 0; z < 4; z++ {
+			pp.SetCompleted(&cp)
+			cp.DoubleProjective(&pp)
 		}
+		p.SetCompleted(&cp)
 
 		t.Set(&lut[0])
 		b := int32(window[i])

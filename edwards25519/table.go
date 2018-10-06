@@ -82,6 +82,8 @@ func (p *NielsPoint) SetExtended(q *ExtendedPoint) *NielsPoint {
 // Fill the table t with data for the point p.
 func (t *ScalarMultTable) Compute(p *ExtendedPoint) {
 	var c, cp ExtendedPoint
+	var c_pp ProjectivePoint
+	var c_cp CompletedPoint
 	cp.Set(p)
 	for i := 0; i < 32; i++ {
 		c.SetZero()
@@ -89,12 +91,16 @@ func (t *ScalarMultTable) Compute(p *ExtendedPoint) {
 			c.Add(&c, &cp)
 			t[i][v].SetExtended(&c)
 		}
-		c.Double(&c)
-		c.Double(&c)
-		c.Double(&c)
-		c.Double(&c)
-		c.Double(&c)
-		cp.Set(&c)
+		c_cp.DoubleExtended(&c)
+		c_pp.SetCompleted(&c_cp)
+		c_cp.DoubleProjective(&c_pp)
+		c_pp.SetCompleted(&c_cp)
+		c_cp.DoubleProjective(&c_pp)
+		c_pp.SetCompleted(&c_cp)
+		c_cp.DoubleProjective(&c_pp)
+		c_pp.SetCompleted(&c_cp)
+		c_cp.DoubleProjective(&c_pp)
+		cp.SetCompleted(&c_cp)
 	}
 }
 
@@ -121,6 +127,7 @@ func (t *ScalarMultTable) ScalarMult(p *ExtendedPoint, s *[32]byte) {
 	p.SetZero()
 	var np NielsPoint
 	var cp CompletedPoint
+	var pp ProjectivePoint
 
 	for i := int32(1); i < 64; i += 2 {
 		t.selectPoint(&np, i/2, int32(w[i]))
@@ -128,11 +135,14 @@ func (t *ScalarMultTable) ScalarMult(p *ExtendedPoint, s *[32]byte) {
 		p.SetCompleted(&cp)
 	}
 
-	// TODO use projective points?
-	p.Double(p)
-	p.Double(p)
-	p.Double(p)
-	p.Double(p)
+	cp.DoubleExtended(p)
+	pp.SetCompleted(&cp)
+	cp.DoubleProjective(&pp)
+	pp.SetCompleted(&cp)
+	cp.DoubleProjective(&pp)
+	pp.SetCompleted(&cp)
+	cp.DoubleProjective(&pp)
+	p.SetCompleted(&cp)
 
 	for i := int32(0); i < 64; i += 2 {
 		t.selectPoint(&np, i/2, int32(w[i]))
