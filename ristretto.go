@@ -29,6 +29,7 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 
@@ -203,15 +204,31 @@ func (p *Point) MarshalText() ([]byte, error) {
 	return ret, nil
 }
 
-func (p *Point) UnmarshalText(txt []byte) error {
+func textToBuf(dst, src []byte) error {
+	var n int
+	var err error
+	if len(src) == 64 {
+		n, err = hex.Decode(dst, src)
+		if n == 32 && err == nil {
+			return nil
+		}
+	}
 	enc := base64.RawURLEncoding
-	var buf [32]byte
-	n, err := enc.Decode(buf[:], txt)
+	n, err = enc.Decode(dst, src)
 	if err != nil {
 		return err
 	}
 	if n != 32 {
 		return fmt.Errorf("ristretto.Point should be 32 bytes; not %d", n)
+	}
+	return nil
+}
+
+func (p *Point) UnmarshalText(txt []byte) error {
+	var buf [32]byte
+	err := textToBuf(buf[:], txt)
+	if err != nil {
+		return err
 	}
 	if !p.SetBytes(&buf) {
 		return errors.New("Buffer does not encode a ristretto.Point")
