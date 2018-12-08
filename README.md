@@ -61,6 +61,8 @@ The amd64 optimized field arithmetic are from George Tankersley's
 which in turn is based on SUPERCOP's
 [amd64-51-30k](https://github.com/floodyberry/supercop/tree/master/crypto_sign/ed25519/amd64-51-30k)
 by Bernstein, Duif, Lange, Schwabe and Yang.
+The variable-time scalar multiplication code is based on that
+of [curve25519-dalek](https://github.com/dalek-cryptography/curve25519-dalek).
 
 ### other platforms
 * [Rust](https://github.com/dalek-cryptography/curve25519-dalek)
