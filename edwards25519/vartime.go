@@ -79,22 +79,25 @@ func (p *ExtendedPoint) VarTimeScalarMult(q *ExtendedPoint, s *[32]byte) *Extend
 		return p
 	}
 
+	var pp ProjectivePoint
+	var cp CompletedPoint
 	for {
 		if naf[i] > 0 {
-			p.Add(p, &lut[(naf[i]+1)/2-1])
+			cp.AddExtended(p, &lut[(naf[i]+1)/2-1])
 		} else {
-			p.Sub(p, &lut[(1-naf[i])/2-1])
+			cp.SubExtended(p, &lut[(1-naf[i])/2-1])
 		}
 
 		if i == 0 {
+			p.SetCompleted(&cp)
 			break
 		}
 
-		// Find next non-zero digit
-		var pp ProjectivePoint
-		var cp CompletedPoint
-		cp.DoubleExtended(p)
 		i -= 1
+		pp.SetCompleted(&cp)
+		cp.DoubleProjective(&pp)
+
+		// Find next non-zero digit
 		for {
 			if i == 0 || naf[i] != 0 {
 				break
