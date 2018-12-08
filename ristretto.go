@@ -122,6 +122,15 @@ func (p *Point) ScalarMult(q *Point, s *Scalar) *Point {
 	return p
 }
 
+// Sets p to s * q assuming s is *not* secret.  Returns p.
+//
+// Warning: this method uses a non-constant time inmplementation and thus leaks
+// information about s.  Use this function only if s is public knowledge.
+func (p *Point) PublicScalarMult(q *Point, s *Scalar) *Point {
+	p.e().VarTimeScalarMult(q.e(), (*[32]uint8)(s))
+	return p
+}
+
 // Sets p to s * B, where B is the edwards25519 basepoint. Returns p.
 func (p *Point) ScalarMultBase(s *Scalar) *Point {
 	edwards25519.BaseScalarMultTable.ScalarMult(p.e(), (*[32]uint8)(s))
