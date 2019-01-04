@@ -14,27 +14,55 @@ import (
 // A number modulo the prime l, where l is the order of the Ristretto group
 // over Edwards25519.
 //
-// The scalar s is represented as an array s[0], ... s[31] with 0 <= s[i] <= 255
-// and s = s[0] + s[1] * 256 + s[2] * 65536 + ... + s[31] * 256^31.
-type Scalar [32]byte
+// The scalar s is represented as an array s[0], ... s[7] with 0 <= s[i] < 2^32
+// and s = s[0] + s[1] * 2^32 + s[2] * 2^64 + ... + s[7] * 2^224.
+type Scalar [8]uint32
 
 var (
 	scZero Scalar
 	scOne  = Scalar{
-		0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		1, 0, 0, 0, 0, 0, 0, 0,
 	}
 	scL = Scalar{
-		0xED, 0xD3, 0xF5, 0x5C, 0x1A, 0x63, 0x12, 0x58, 0xD6, 0x9C, 0xF7,
-		0xA2, 0xDE, 0xF9, 0xDE, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
+		0x5cf5d3ed, 0x5812631a, 0xa2f79cd6, 0x14def9de,
+		0x00000000, 0x00000000, 0x00000000, 0x10000000,
 	}
 )
 
 // Encode s little endian into buf. Returns s.
 func (s *Scalar) BytesInto(buf *[32]byte) *Scalar {
-	copy(buf[:], s[:])
+	buf[0] = uint8(s[0])
+	buf[1] = uint8(s[0] >> 8)
+	buf[2] = uint8(s[0] >> 16)
+	buf[3] = uint8(s[0] >> 24)
+	buf[4] = uint8(s[1])
+	buf[5] = uint8(s[1] >> 8)
+	buf[6] = uint8(s[1] >> 16)
+	buf[7] = uint8(s[1] >> 24)
+	buf[8] = uint8(s[2])
+	buf[9] = uint8(s[2] >> 8)
+	buf[10] = uint8(s[2] >> 16)
+	buf[11] = uint8(s[2] >> 24)
+	buf[12] = uint8(s[3])
+	buf[13] = uint8(s[3] >> 8)
+	buf[14] = uint8(s[3] >> 16)
+	buf[15] = uint8(s[3] >> 24)
+	buf[16] = uint8(s[4])
+	buf[17] = uint8(s[4] >> 8)
+	buf[18] = uint8(s[4] >> 16)
+	buf[19] = uint8(s[4] >> 24)
+	buf[20] = uint8(s[5])
+	buf[21] = uint8(s[5] >> 8)
+	buf[22] = uint8(s[5] >> 16)
+	buf[23] = uint8(s[5] >> 24)
+	buf[24] = uint8(s[6])
+	buf[25] = uint8(s[6] >> 8)
+	buf[26] = uint8(s[6] >> 16)
+	buf[27] = uint8(s[6] >> 24)
+	buf[28] = uint8(s[7])
+	buf[29] = uint8(s[7] >> 8)
+	buf[30] = uint8(s[7] >> 16)
+	buf[31] = uint8(s[7] >> 24)
 	return s
 }
 
@@ -48,8 +76,14 @@ func (s *Scalar) Bytes() []byte {
 // Sets s to x mod l, where x is interpreted little endian and the
 // top 3 bits are ignored.  Returns s.
 func (s *Scalar) SetBytes(x *[32]byte) *Scalar {
-	copy(s[:], x[:])
-	s[31] &= 0x1f
+	s[0] = load4u32(x[0:])
+	s[1] = load4u32(x[4:])
+	s[2] = load4u32(x[8:])
+	s[3] = load4u32(x[12:])
+	s[4] = load4u32(x[16:])
+	s[5] = load4u32(x[20:])
+	s[6] = load4u32(x[24:])
+	s[7] = load4u32(x[28:]) & 0x1fffffff
 	return s.Sub(s, &scL)
 }
 
@@ -60,29 +94,72 @@ func (s *Scalar) Neg(a *Scalar) *Scalar {
 
 // Sets s to a + b.  Returns s.
 func (s *Scalar) Add(a, b *Scalar) *Scalar {
-	var carry uint16
-	for i := 0; i < 32; i++ {
-		carry = uint16(a[i]) + uint16(b[i]) + (carry >> 8)
-		s[i] = uint8(carry)
-	}
+	carry := uint64(a[0]) + uint64(b[0])
+	s[0] = uint32(carry)
+	carry = uint64(a[1]) + uint64(b[1]) + (carry >> 32)
+	s[1] = uint32(carry)
+	carry = uint64(a[2]) + uint64(b[2]) + (carry >> 32)
+	s[2] = uint32(carry)
+	carry = uint64(a[3]) + uint64(b[3]) + (carry >> 32)
+	s[3] = uint32(carry)
+	carry = uint64(a[4]) + uint64(b[4]) + (carry >> 32)
+	s[4] = uint32(carry)
+	carry = uint64(a[5]) + uint64(b[5]) + (carry >> 32)
+	s[5] = uint32(carry)
+	carry = uint64(a[6]) + uint64(b[6]) + (carry >> 32)
+	s[6] = uint32(carry)
+	carry = uint64(a[7]) + uint64(b[7]) + (carry >> 32)
+	s[7] = uint32(carry)
 	return s.Sub(s, &scL)
 }
 
 // Sets s to a - b.  Returns s.
 func (s *Scalar) Sub(a, b *Scalar) *Scalar {
-	var borrow uint16
-	for i := 0; i < 32; i++ {
-		borrow = uint16(a[i]) - uint16(b[i]) - (borrow >> 15)
-		s[i] = uint8(borrow)
-	}
+	borrow := uint64(a[0]) - uint64(b[0])
+	s0 := uint32(borrow)
+	borrow = uint64(a[1]) - uint64(b[1]) - (borrow >> 63)
+	s1 := uint32(borrow)
+	borrow = uint64(a[2]) - uint64(b[2]) - (borrow >> 63)
+	s2 := uint32(borrow)
+	borrow = uint64(a[3]) - uint64(b[3]) - (borrow >> 63)
+	s3 := uint32(borrow)
+	borrow = uint64(a[4]) - uint64(b[4]) - (borrow >> 63)
+	s4 := uint32(borrow)
+	borrow = uint64(a[5]) - uint64(b[5]) - (borrow >> 63)
+	s5 := uint32(borrow)
+	borrow = uint64(a[6]) - uint64(b[6]) - (borrow >> 63)
+	s6 := uint32(borrow)
+	borrow = uint64(a[7]) - uint64(b[7]) - (borrow >> 63)
+	s7 := uint32(borrow)
 
 	// Add l if underflown
-	ufMask := ((borrow >> 15) ^ 1) - 1
-	var carry uint16
-	for i := 0; i < 32; i++ {
-		carry = uint16(s[i]) + (carry >> 8) + (uint16(scL[i]) & ufMask)
-		s[i] = uint8(carry)
-	}
+	ufMask := ((borrow >> 63) ^ 1) - 1
+	carry := uint64(s0) + (ufMask & uint64(0x5CF5D3ED))
+	s0 = uint32(carry)
+	carry = uint64(s1) + (carry >> 32) + (ufMask & uint64(0x5812631A))
+	s1 = uint32(carry)
+	carry = uint64(s2) + (carry >> 32) + (ufMask & uint64(0xA2F79CD6))
+	s2 = uint32(carry)
+	carry = uint64(s3) + (carry >> 32) + (ufMask & uint64(0x14DEF9DE))
+	s3 = uint32(carry)
+	carry = uint64(s4) + (carry >> 32)
+	s4 = uint32(carry)
+	carry = uint64(s5) + (carry >> 32)
+	s5 = uint32(carry)
+	carry = uint64(s6) + (carry >> 32)
+	s6 = uint32(carry)
+	carry = uint64(s7) + (carry >> 32) + (ufMask & 0x10000000)
+	s7 = uint32(carry)
+
+	s[0] = s0
+	s[1] = s1
+	s[2] = s2
+	s[3] = s3
+	s[4] = s4
+	s[5] = s5
+	s[6] = s6
+	s[7] = s7
+
 	return s
 }
 
@@ -113,8 +190,7 @@ func (s *Scalar) SetBigInt(x *big.Int) *Scalar {
 	for i := 0; i < len(buf) && i < 32; i++ {
 		rBuf[i] = buf[len(buf)-i-1]
 	}
-	*s = rBuf
-	return s
+	return s.SetBytes(&rBuf)
 }
 
 // Sets s to t.  Returns s.
@@ -152,44 +228,52 @@ func load4(in []byte) int64 {
 	return r
 }
 
+// Interprets a 4-byte unsigned little endian byte-slice as uint32
+func load4u32(in []byte) uint32 {
+	return (uint32(in[0]) | (uint32(in[1]) << 8) | (uint32(in[2]) << 16) | (uint32(in[3]) << 24))
+}
+
 // Sets s to a * b + c.  Returns s.
 func (s *Scalar) MulAdd(a, b, c *Scalar) *Scalar {
-	a0 := 0x1FFFFF & load3(a[:])
-	a1 := 0x1FFFFF & (load4(a[2:]) >> 5)
-	a2 := 0x1FFFFF & (load3(a[5:]) >> 2)
-	a3 := 0x1FFFFF & (load4(a[7:]) >> 7)
-	a4 := 0x1FFFFF & (load4(a[10:]) >> 4)
-	a5 := 0x1FFFFF & (load3(a[13:]) >> 1)
-	a6 := 0x1FFFFF & (load4(a[15:]) >> 6)
-	a7 := 0x1FFFFF & (load3(a[18:]) >> 3)
-	a8 := 0x1FFFFF & load3(a[21:])
-	a9 := 0x1FFFFF & (load4(a[23:]) >> 5)
-	a10 := 0x1FFFFF & (load3(a[26:]) >> 2)
-	a11 := (load4(a[28:]) >> 7)
-	b0 := 0x1FFFFF & load3(b[:])
-	b1 := 0x1FFFFF & (load4(b[2:]) >> 5)
-	b2 := 0x1FFFFF & (load3(b[5:]) >> 2)
-	b3 := 0x1FFFFF & (load4(b[7:]) >> 7)
-	b4 := 0x1FFFFF & (load4(b[10:]) >> 4)
-	b5 := 0x1FFFFF & (load3(b[13:]) >> 1)
-	b6 := 0x1FFFFF & (load4(b[15:]) >> 6)
-	b7 := 0x1FFFFF & (load3(b[18:]) >> 3)
-	b8 := 0x1FFFFF & load3(b[21:])
-	b9 := 0x1FFFFF & (load4(b[23:]) >> 5)
-	b10 := 0x1FFFFF & (load3(b[26:]) >> 2)
-	b11 := (load4(b[28:]) >> 7)
-	c0 := 0x1FFFFF & load3(c[:])
-	c1 := 0x1FFFFF & (load4(c[2:]) >> 5)
-	c2 := 0x1FFFFF & (load3(c[5:]) >> 2)
-	c3 := 0x1FFFFF & (load4(c[7:]) >> 7)
-	c4 := 0x1FFFFF & (load4(c[10:]) >> 4)
-	c5 := 0x1FFFFF & (load3(c[13:]) >> 1)
-	c6 := 0x1FFFFF & (load4(c[15:]) >> 6)
-	c7 := 0x1FFFFF & (load3(c[18:]) >> 3)
-	c8 := 0x1FFFFF & load3(c[21:])
-	c9 := 0x1FFFFF & (load4(c[23:]) >> 5)
-	c10 := 0x1FFFFF & (load3(c[26:]) >> 2)
-	c11 := (load4(c[28:]) >> 7)
+	a0 := int64(a[0] & 0x1fffff)
+	a1 := int64(((a[0] >> 21) | (a[1] << 11)) & 0x1fffff)
+	a2 := int64((a[1] >> 10) & 0x1fffff)
+	a3 := int64(((a[1] >> 31) | (a[2] << 1)) & 0x1fffff)
+	a4 := int64(((a[2] >> 20) | (a[3] << 12)) & 0x1fffff)
+	a5 := int64((a[3] >> 9) & 0x1fffff)
+	a6 := int64(((a[3] >> 30) | (a[4] << 2)) & 0x1fffff)
+	a7 := int64(((a[4] >> 19) | (a[5] << 13)) & 0x1fffff)
+	a8 := int64((a[5] >> 8) & 0x1fffff)
+	a9 := int64(((a[5] >> 29) | (a[6] << 3)) & 0x1fffff)
+	a10 := int64(((a[6] >> 18) | (a[7] << 14)) & 0x1fffff)
+	a11 := int64((a[7] >> 7))
+
+	b0 := int64(b[0] & 0x1fffff)
+	b1 := int64(((b[0] >> 21) | (b[1] << 11)) & 0x1fffff)
+	b2 := int64((b[1] >> 10) & 0x1fffff)
+	b3 := int64(((b[1] >> 31) | (b[2] << 1)) & 0x1fffff)
+	b4 := int64(((b[2] >> 20) | (b[3] << 12)) & 0x1fffff)
+	b5 := int64((b[3] >> 9) & 0x1fffff)
+	b6 := int64(((b[3] >> 30) | (b[4] << 2)) & 0x1fffff)
+	b7 := int64(((b[4] >> 19) | (b[5] << 13)) & 0x1fffff)
+	b8 := int64((b[5] >> 8) & 0x1fffff)
+	b9 := int64(((b[5] >> 29) | (b[6] << 3)) & 0x1fffff)
+	b10 := int64(((b[6] >> 18) | (b[7] << 14)) & 0x1fffff)
+	b11 := int64((b[7] >> 7))
+
+	c0 := int64(c[0] & 0x1fffff)
+	c1 := int64(((c[0] >> 21) | (c[1] << 11)) & 0x1fffff)
+	c2 := int64((c[1] >> 10) & 0x1fffff)
+	c3 := int64(((c[1] >> 31) | (c[2] << 1)) & 0x1fffff)
+	c4 := int64(((c[2] >> 20) | (c[3] << 12)) & 0x1fffff)
+	c5 := int64((c[3] >> 9) & 0x1fffff)
+	c6 := int64(((c[3] >> 30) | (c[4] << 2)) & 0x1fffff)
+	c7 := int64(((c[4] >> 19) | (c[5] << 13)) & 0x1fffff)
+	c8 := int64((c[5] >> 8) & 0x1fffff)
+	c9 := int64(((c[5] >> 29) | (c[6] << 3)) & 0x1fffff)
+	c10 := int64(((c[6] >> 18) | (c[7] << 14)) & 0x1fffff)
+	c11 := int64((c[7] >> 7))
+
 	var carry [23]int64
 
 	s0 := c0 + a0*b0
@@ -544,38 +628,15 @@ func (s *Scalar) MulAdd(a, b, c *Scalar) *Scalar {
 	s11 += carry[10]
 	s10 -= carry[10] << 21
 
-	s[0] = byte(s0 >> 0)
-	s[1] = byte(s0 >> 8)
-	s[2] = byte((s0 >> 16) | (s1 << 5))
-	s[3] = byte(s1 >> 3)
-	s[4] = byte(s1 >> 11)
-	s[5] = byte((s1 >> 19) | (s2 << 2))
-	s[6] = byte(s2 >> 6)
-	s[7] = byte((s2 >> 14) | (s3 << 7))
-	s[8] = byte(s3 >> 1)
-	s[9] = byte(s3 >> 9)
-	s[10] = byte((s3 >> 17) | (s4 << 4))
-	s[11] = byte(s4 >> 4)
-	s[12] = byte(s4 >> 12)
-	s[13] = byte((s4 >> 20) | (s5 << 1))
-	s[14] = byte(s5 >> 7)
-	s[15] = byte((s5 >> 15) | (s6 << 6))
-	s[16] = byte(s6 >> 2)
-	s[17] = byte(s6 >> 10)
-	s[18] = byte((s6 >> 18) | (s7 << 3))
-	s[19] = byte(s7 >> 5)
-	s[20] = byte(s7 >> 13)
-	s[21] = byte(s8 >> 0)
-	s[22] = byte(s8 >> 8)
-	s[23] = byte((s8 >> 16) | (s9 << 5))
-	s[24] = byte(s9 >> 3)
-	s[25] = byte(s9 >> 11)
-	s[26] = byte((s9 >> 19) | (s10 << 2))
-	s[27] = byte(s10 >> 6)
-	s[28] = byte((s10 >> 14) | (s11 << 7))
-	s[29] = byte(s11 >> 1)
-	s[30] = byte(s11 >> 9)
-	s[31] = byte(s11 >> 17)
+	s[0] = uint32(s0) | uint32(s1<<21)
+	s[1] = uint32(s1>>11) | uint32(s2<<10) | uint32(s3<<31)
+	s[2] = uint32(s3>>1) | uint32(s4<<20)
+	s[3] = uint32(s4>>12) | uint32(s5<<9) | uint32(s6<<30)
+	s[4] = uint32(s6>>2) | uint32(s7<<19)
+	s[5] = uint32(s7>>13) | uint32(s8<<8) | uint32(s9<<29)
+	s[6] = uint32(s9>>3) | uint32(s10<<18)
+	s[7] = uint32(s10>>14) | uint32(s11<<7)
+
 	return s
 }
 
@@ -873,38 +934,14 @@ func (s *Scalar) SetReduced(t *[64]byte) *Scalar {
 	t11 += carry[10]
 	t10 -= carry[10] << 21
 
-	s[0] = byte(t0 >> 0)
-	s[1] = byte(t0 >> 8)
-	s[2] = byte((t0 >> 16) | (t1 << 5))
-	s[3] = byte(t1 >> 3)
-	s[4] = byte(t1 >> 11)
-	s[5] = byte((t1 >> 19) | (t2 << 2))
-	s[6] = byte(t2 >> 6)
-	s[7] = byte((t2 >> 14) | (t3 << 7))
-	s[8] = byte(t3 >> 1)
-	s[9] = byte(t3 >> 9)
-	s[10] = byte((t3 >> 17) | (t4 << 4))
-	s[11] = byte(t4 >> 4)
-	s[12] = byte(t4 >> 12)
-	s[13] = byte((t4 >> 20) | (t5 << 1))
-	s[14] = byte(t5 >> 7)
-	s[15] = byte((t5 >> 15) | (t6 << 6))
-	s[16] = byte(t6 >> 2)
-	s[17] = byte(t6 >> 10)
-	s[18] = byte((t6 >> 18) | (t7 << 3))
-	s[19] = byte(t7 >> 5)
-	s[20] = byte(t7 >> 13)
-	s[21] = byte(t8 >> 0)
-	s[22] = byte(t8 >> 8)
-	s[23] = byte((t8 >> 16) | (t9 << 5))
-	s[24] = byte(t9 >> 3)
-	s[25] = byte(t9 >> 11)
-	s[26] = byte((t9 >> 19) | (t10 << 2))
-	s[27] = byte(t10 >> 6)
-	s[28] = byte((t10 >> 14) | (t11 << 7))
-	s[29] = byte(t11 >> 1)
-	s[30] = byte(t11 >> 9)
-	s[31] = byte(t11 >> 17)
+	s[0] = uint32(t0) | uint32(t1<<21)
+	s[1] = uint32(t1>>11) | uint32(t2<<10) | uint32(t3<<31)
+	s[2] = uint32(t3>>1) | uint32(t4<<20)
+	s[3] = uint32(t4>>12) | uint32(t5<<9) | uint32(t6<<30)
+	s[4] = uint32(t6>>2) | uint32(t7<<19)
+	s[5] = uint32(t7>>13) | uint32(t8<<8) | uint32(t9<<29)
+	s[6] = uint32(t9>>3) | uint32(t10<<18)
+	s[7] = uint32(t10>>14) | uint32(t11<<7)
 
 	return s
 }
@@ -918,18 +955,18 @@ func (s *Scalar) Rand() *Scalar {
 
 // Sets s to a*a.  Returns s.
 func (s *Scalar) Square(a *Scalar) *Scalar {
-	a0 := 0x1FFFFF & load3(a[:])
-	a1 := 0x1FFFFF & (load4(a[2:]) >> 5)
-	a2 := 0x1FFFFF & (load3(a[5:]) >> 2)
-	a3 := 0x1FFFFF & (load4(a[7:]) >> 7)
-	a4 := 0x1FFFFF & (load4(a[10:]) >> 4)
-	a5 := 0x1FFFFF & (load3(a[13:]) >> 1)
-	a6 := 0x1FFFFF & (load4(a[15:]) >> 6)
-	a7 := 0x1FFFFF & (load3(a[18:]) >> 3)
-	a8 := 0x1FFFFF & load3(a[21:])
-	a9 := 0x1FFFFF & (load4(a[23:]) >> 5)
-	a10 := 0x1FFFFF & (load3(a[26:]) >> 2)
-	a11 := (load4(a[28:]) >> 7)
+	a0 := int64(a[0] & 0x1fffff)
+	a1 := int64(((a[0] >> 21) | (a[1] << 11)) & 0x1fffff)
+	a2 := int64((a[1] >> 10) & 0x1fffff)
+	a3 := int64(((a[1] >> 31) | (a[2] << 1)) & 0x1fffff)
+	a4 := int64(((a[2] >> 20) | (a[3] << 12)) & 0x1fffff)
+	a5 := int64((a[3] >> 9) & 0x1fffff)
+	a6 := int64(((a[3] >> 30) | (a[4] << 2)) & 0x1fffff)
+	a7 := int64(((a[4] >> 19) | (a[5] << 13)) & 0x1fffff)
+	a8 := int64((a[5] >> 8) & 0x1fffff)
+	a9 := int64(((a[5] >> 29) | (a[6] << 3)) & 0x1fffff)
+	a10 := int64(((a[6] >> 18) | (a[7] << 14)) & 0x1fffff)
+	a11 := int64((a[7] >> 7))
 	var carry [23]int64
 
 	s0 := a0 * a0
@@ -1284,38 +1321,14 @@ func (s *Scalar) Square(a *Scalar) *Scalar {
 	s11 += carry[10]
 	s10 -= carry[10] << 21
 
-	s[0] = byte(s0 >> 0)
-	s[1] = byte(s0 >> 8)
-	s[2] = byte((s0 >> 16) | (s1 << 5))
-	s[3] = byte(s1 >> 3)
-	s[4] = byte(s1 >> 11)
-	s[5] = byte((s1 >> 19) | (s2 << 2))
-	s[6] = byte(s2 >> 6)
-	s[7] = byte((s2 >> 14) | (s3 << 7))
-	s[8] = byte(s3 >> 1)
-	s[9] = byte(s3 >> 9)
-	s[10] = byte((s3 >> 17) | (s4 << 4))
-	s[11] = byte(s4 >> 4)
-	s[12] = byte(s4 >> 12)
-	s[13] = byte((s4 >> 20) | (s5 << 1))
-	s[14] = byte(s5 >> 7)
-	s[15] = byte((s5 >> 15) | (s6 << 6))
-	s[16] = byte(s6 >> 2)
-	s[17] = byte(s6 >> 10)
-	s[18] = byte((s6 >> 18) | (s7 << 3))
-	s[19] = byte(s7 >> 5)
-	s[20] = byte(s7 >> 13)
-	s[21] = byte(s8 >> 0)
-	s[22] = byte(s8 >> 8)
-	s[23] = byte((s8 >> 16) | (s9 << 5))
-	s[24] = byte(s9 >> 3)
-	s[25] = byte(s9 >> 11)
-	s[26] = byte((s9 >> 19) | (s10 << 2))
-	s[27] = byte(s10 >> 6)
-	s[28] = byte((s10 >> 14) | (s11 << 7))
-	s[29] = byte(s11 >> 1)
-	s[30] = byte(s11 >> 9)
-	s[31] = byte(s11 >> 17)
+	s[0] = uint32(s0) | uint32(s1<<21)
+	s[1] = uint32(s1>>11) | uint32(s2<<10) | uint32(s3<<31)
+	s[2] = uint32(s3>>1) | uint32(s4<<20)
+	s[3] = uint32(s4>>12) | uint32(s5<<9) | uint32(s6<<30)
+	s[4] = uint32(s6>>2) | uint32(s7<<19)
+	s[5] = uint32(s7>>13) | uint32(s8<<8) | uint32(s9<<29)
+	s[6] = uint32(s9>>3) | uint32(s10<<18)
+	s[7] = uint32(s10>>14) | uint32(s11<<7)
 	return s
 }
 
@@ -1533,12 +1546,9 @@ func (s *Scalar) Inverse(t *Scalar) *Scalar {
 
 // IsNonZeroI returns 1 if s is non-zero and 0 otherwise.
 func (s *Scalar) IsNonZeroI() int32 {
-	var ret uint8
-	ret = (s[0] | s[1] | s[2] | s[3] | s[4] | s[5] | s[6] |
-		s[7] | s[8] | s[9] | s[10] | s[11] | s[12] | s[13] |
-		s[14] | s[15] | s[16] | s[17] | s[18] | s[19] | s[20] |
-		s[21] | s[22] | s[23] | s[24] | s[25] | s[26] | s[27] |
-		s[28] | s[29] | s[30] | s[31])
+	ret := s[0] | s[1] | s[2] | s[3] | s[4] | s[5] | s[6] | s[7]
+	ret |= ret >> 16
+	ret |= ret >> 8
 	ret |= ret >> 4
 	ret |= ret >> 2
 	ret |= ret >> 1

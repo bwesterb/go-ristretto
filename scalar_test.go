@@ -43,7 +43,7 @@ func TestScBigIntPacking(t *testing.T) {
 func TestScSub(t *testing.T) {
 	var bi1, bi2, bi3 big.Int
 	var s1, s2, s3 ristretto.Scalar
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		bi1.Rand(rnd, &biL)
 		bi2.Rand(rnd, &biL)
 		bi3.Sub(&bi1, &bi2)
@@ -59,7 +59,7 @@ func TestScSub(t *testing.T) {
 func TestScAdd(t *testing.T) {
 	var bi1, bi2, bi3 big.Int
 	var s1, s2, s3 ristretto.Scalar
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		bi1.Rand(rnd, &biL)
 		bi2.Rand(rnd, &biL)
 		bi3.Add(&bi1, &bi2)
@@ -75,7 +75,7 @@ func TestScAdd(t *testing.T) {
 func TestScMul(t *testing.T) {
 	var bi1, bi2, bi3 big.Int
 	var s1, s2, s3 ristretto.Scalar
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		bi1.Rand(rnd, &biL)
 		bi2.Rand(rnd, &biL)
 		bi3.Mul(&bi1, &bi2)
@@ -91,7 +91,7 @@ func TestScMul(t *testing.T) {
 func TestScSquare(t *testing.T) {
 	var bi1, bi2 big.Int
 	var s1, s2 ristretto.Scalar
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		bi1.Rand(rnd, &biL)
 		bi2.Mul(&bi1, &bi1)
 		bi2.Mod(&bi2, &biL)
@@ -106,7 +106,7 @@ func TestScSquare(t *testing.T) {
 func TestScMulAdd(t *testing.T) {
 	var bi1, bi2, bi3, bi4 big.Int
 	var s1, s2, s3, s4 ristretto.Scalar
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		bi1.Rand(rnd, &biL)
 		bi2.Rand(rnd, &biL)
 		bi3.Rand(rnd, &biL)
@@ -139,7 +139,7 @@ func TestScInverse(t *testing.T) {
 func TestScNeg(t *testing.T) {
 	var bi1, bi2 big.Int
 	var s1, s2 ristretto.Scalar
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		bi1.Rand(rnd, &biL)
 		bi2.Neg(&bi1)
 		bi2.Mod(&bi2, &biL)
@@ -231,6 +231,20 @@ func BenchmarkScInverse(b *testing.B) {
 	var s ristretto.Scalar
 	for n := 0; n < b.N; n++ {
 		s.Inverse(&s)
+	}
+}
+
+func BenchmarkScAdd(b *testing.B) {
+	var s, t ristretto.Scalar
+	for n := 0; n < b.N; n++ {
+		s.Add(&s, &t)
+	}
+}
+
+func BenchmarkScSub(b *testing.B) {
+	var s, t ristretto.Scalar
+	for n := 0; n < b.N; n++ {
+		s.Sub(&s, &t)
 	}
 }
 
