@@ -30,7 +30,7 @@ var c2 ristretto.Point
 p.Rand()
 r.Rand()
 c2.ScalarMultBase(&r)
-c1.ScalarMult(&publicKey, &r)
+c1.PublicScalarMult(&publicKey, &r)
 c1.Add(&c1, &p)
 
 // Decrypt (c1,c2) back to p

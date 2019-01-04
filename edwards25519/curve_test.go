@@ -314,3 +314,26 @@ func BenchmarkScalarMultTableScalarMult(b *testing.B) {
 		table.ScalarMult(&ep, &sBuf)
 	}
 }
+
+func BenchmarkScalarMultTableVarTimeScalarMult(b *testing.B) {
+	var buf, sBuf [32]byte
+	var biS big.Int
+	var cp edwards25519.CompletedPoint
+	var ep edwards25519.ExtendedPoint
+	var fe edwards25519.FieldElement
+	var table edwards25519.ScalarMultTable
+	biS.Rand(rnd, &biL)
+	srBuf := biS.Bytes()
+	for j := 0; j < len(srBuf); j++ {
+		sBuf[j] = srBuf[len(srBuf)-j-1]
+	}
+	rnd.Read(buf[:])
+	fe.SetBytes(&buf)
+	cp.SetRistrettoElligator2(&fe)
+	ep.SetCompleted(&cp)
+	table.Compute(&ep)
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		table.VarTimeScalarMult(&ep, &sBuf)
+	}
+}

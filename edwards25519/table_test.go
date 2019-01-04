@@ -56,6 +56,23 @@ func TestSubExtendedNiels(t *testing.T) {
 	}
 }
 
+func TestTableVarTimeBaseScalarMult(t *testing.T) {
+	var table edwards25519.ScalarMultTable
+	var B, p1, p2 edwards25519.ExtendedPoint
+	B.SetBase()
+	table.Compute(&B)
+	var s [32]byte
+	for i := 0; i < 1000; i++ {
+		rnd.Read(s[:])
+		s[31] &= 31
+		table.ScalarMult(&p1, &s)
+		table.VarTimeScalarMult(&p2, &s)
+		if p1.RistrettoEqualsI(&p2) != 1 {
+			t.Fatalf("[%v]B = %v != %v", s, p2, p1)
+		}
+	}
+}
+
 func TestTableBaseScalarMult(t *testing.T) {
 	var table edwards25519.ScalarMultTable
 	var B, p1, p2 edwards25519.ExtendedPoint

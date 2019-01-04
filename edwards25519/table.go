@@ -15,6 +15,14 @@ func (p *NielsPoint) SetZero() *NielsPoint {
 	return p
 }
 
+// Set p to q.  Returns p.
+func (p *NielsPoint) Set(q *NielsPoint) *NielsPoint {
+	p.YPlusX.Set(&q.YPlusX)
+	p.YMinusX.Set(&q.YMinusX)
+	p.XY2D.Set(&q.XY2D)
+	return p
+}
+
 // Set p to q if b == 1.  Assumes b is 0 or 1.  Returns p.
 func (p *NielsPoint) ConditionalSet(q *NielsPoint, b int32) *NielsPoint {
 	p.YPlusX.ConditionalSet(&q.YPlusX, b)
@@ -151,6 +159,39 @@ func (t *ScalarMultTable) ScalarMult(p *ExtendedPoint, s *[32]byte) {
 	}
 }
 
+func (t *ScalarMultTable) VarTimeScalarMult(p *ExtendedPoint, s *[32]byte) {
+	var w [64]int8
+	computeScalarWindow4(s, &w)
+
+	p.SetZero()
+	var np NielsPoint
+	var cp CompletedPoint
+	var pp ProjectivePoint
+
+	for i := int32(0); i < 32; i++ {
+		if t.varTimeSelectPoint(&np, i, int32(w[2*i+1])) {
+			cp.AddExtendedNiels(p, &np)
+			p.SetCompleted(&cp)
+		}
+	}
+
+	cp.DoubleExtended(p)
+	pp.SetCompleted(&cp)
+	cp.DoubleProjective(&pp)
+	pp.SetCompleted(&cp)
+	cp.DoubleProjective(&pp)
+	pp.SetCompleted(&cp)
+	cp.DoubleProjective(&pp)
+	p.SetCompleted(&cp)
+
+	for i := int32(0); i < 32; i++ {
+		if t.varTimeSelectPoint(&np, i, int32(w[2*i])) {
+			cp.AddExtendedNiels(p, &np)
+			p.SetCompleted(&cp)
+		}
+	}
+}
+
 func (t *ScalarMultTable) selectPoint(p *NielsPoint, pos int32, b int32) {
 	bNegative := negative(b)
 	bAbs := b - (((-bNegative) & b) << 1)
@@ -161,4 +202,16 @@ func (t *ScalarMultTable) selectPoint(p *NielsPoint, pos int32, b int32) {
 	var negP NielsPoint
 	negP.Neg(p)
 	p.ConditionalSet(&negP, bNegative)
+}
+
+func (t *ScalarMultTable) varTimeSelectPoint(p *NielsPoint, pos int32, b int32) bool {
+	if b == 0 {
+		return false
+	}
+	if b < 0 {
+		p.Neg(&t[pos][-b-1])
+	} else {
+		p.Set(&t[pos][b-1])
+	}
+	return true
 }
