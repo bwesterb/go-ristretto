@@ -125,7 +125,7 @@ func (p *Point) ScalarMultTable(t *ScalarMultTable, s *Scalar) *Point {
 // information about s.  Use this function only if s is public knowledge.
 func (p *Point) PublicScalarMultTable(t *ScalarMultTable, s *Scalar) *Point {
 	var buf [32]byte
-	s.SetBytes(&buf)
+	s.BytesInto(&buf)
 	t.t().VarTimeScalarMult(p.e(), &buf)
 	return p
 }
@@ -155,7 +155,7 @@ func (p *Point) PublicScalarMult(q *Point, s *Scalar) *Point {
 // information about s.  Use this function only if s is public knowledge.
 func (p *Point) PublicScalarMultBase(s *Scalar) *Point {
 	var buf [32]byte
-	s.SetBytes(&buf)
+	s.BytesInto(&buf)
 	edwards25519.BaseScalarMultTable.VarTimeScalarMult(p.e(), &buf)
 	return p
 }
