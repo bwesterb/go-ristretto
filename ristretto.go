@@ -113,7 +113,7 @@ func (p *Point) SetElligator(buf *[32]byte) *Point {
 // computed. Returns p.
 func (p *Point) ScalarMultTable(t *ScalarMultTable, s *Scalar) *Point {
 	var buf [32]byte
-	s.SetBytes(&buf)
+	s.BytesInto(&buf)
 	t.t().ScalarMult(p.e(), &buf)
 	return p
 }
@@ -133,7 +133,7 @@ func (p *Point) PublicScalarMultTable(t *ScalarMultTable, s *Scalar) *Point {
 // Sets p to s * q.  Returns p.
 func (p *Point) ScalarMult(q *Point, s *Scalar) *Point {
 	var buf [32]byte
-	s.SetBytes(&buf)
+	s.BytesInto(&buf)
 	p.e().ScalarMult(q.e(), &buf)
 	return p
 }
@@ -144,7 +144,7 @@ func (p *Point) ScalarMult(q *Point, s *Scalar) *Point {
 // information about s.  Use this function only if s is public knowledge.
 func (p *Point) PublicScalarMult(q *Point, s *Scalar) *Point {
 	var buf [32]byte
-	s.SetBytes(&buf)
+	s.BytesInto(&buf)
 	p.e().VarTimeScalarMult(q.e(), &buf)
 	return p
 }
@@ -163,7 +163,7 @@ func (p *Point) PublicScalarMultBase(s *Scalar) *Point {
 // Sets p to s * B, where B is the edwards25519 basepoint. Returns p.
 func (p *Point) ScalarMultBase(s *Scalar) *Point {
 	var buf [32]byte
-	s.SetBytes(&buf)
+	s.BytesInto(&buf)
 	edwards25519.BaseScalarMultTable.ScalarMult(p.e(), &buf)
 	return p
 }

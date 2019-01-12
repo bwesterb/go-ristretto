@@ -1,6 +1,7 @@
 package ristretto_test
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"math/big"
 	"math/rand"
@@ -216,6 +217,28 @@ func TestScDerive(t *testing.T) {
 		if v != v2 {
 			t.Fatalf("Derive(%s) = %s != %s", k, v, v2)
 		}
+	}
+}
+
+func TestIssue14(t *testing.T) {
+	var buf [32]byte
+	var s ristretto.Scalar
+	var p1, p2 ristretto.Point
+
+	tmp, _ := base64.StdEncoding.DecodeString(
+		"QekHbzmOtwUfRnheuyj1qyt8HN1WPjW4Jy199/2fQQ8=")
+	copy(buf[:], tmp)
+	s.SetBytes(&buf)
+
+	tmp, _ = base64.StdEncoding.DecodeString(
+		"SqbtfZl5+A1RtHVfzN8HJCLUcC0Bz2kdThR7wRCUbCQ=")
+	copy(buf[:], tmp)
+	p1.SetBytes(&buf)
+
+	p2.ScalarMultBase(&s)
+
+	if !p1.Equals(&p2) {
+		t.Fatalf("%v*B = %v != %v", s, p2, p1)
 	}
 }
 
