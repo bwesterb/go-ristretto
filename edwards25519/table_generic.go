@@ -1,4 +1,4 @@
-// +build !amd64
+// +build !amd64,!go1.12
 
 package edwards25519
 
