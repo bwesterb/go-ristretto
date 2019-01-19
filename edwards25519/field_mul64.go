@@ -56,7 +56,7 @@ func (fe *FieldElement) Mul(a, b *FieldElement) *FieldElement {
 
 	c1l, carry = bits.Add64((c0l>>51)|(c0h<<13), c1l, 0)
 	c1h, _ = bits.Add64(c1h, 0, carry)
-	h0 := c0l & 0x7ffffffffffff
+	c0l &= 0x7ffffffffffff
 
 	c2h, c2l := bits.Mul64(b0, a2)
 	h, l = bits.Mul64(b1, a1)
@@ -74,7 +74,7 @@ func (fe *FieldElement) Mul(a, b *FieldElement) *FieldElement {
 
 	c2l, carry = bits.Add64((c1l>>51)|(c1h<<13), c2l, 0)
 	c2h, _ = bits.Add64(c2h, 0, carry)
-	h1 := c1l & 0x7ffffffffffff
+	c1l &= 0x7ffffffffffff
 
 	c3h, c3l := bits.Mul64(b0, a3)
 	h, l = bits.Mul64(b1, a2)
@@ -92,7 +92,7 @@ func (fe *FieldElement) Mul(a, b *FieldElement) *FieldElement {
 
 	c3l, carry = bits.Add64((c2l>>51)|(c2h<<13), c3l, 0)
 	c3h, _ = bits.Add64(c3h, 0, carry)
-	h2 := c2l & 0x7ffffffffffff
+	c2l &= 0x7ffffffffffff
 
 	c4h, c4l := bits.Mul64(b0, a4)
 	h, l = bits.Mul64(b1, a3)
@@ -110,19 +110,19 @@ func (fe *FieldElement) Mul(a, b *FieldElement) *FieldElement {
 
 	c4l, carry = bits.Add64((c3l>>51)|(c3h<<13), c4l, 0)
 	c4h, _ = bits.Add64(c4h, 0, carry)
-	h3 := c3l & 0x7ffffffffffff
+	c3l &= 0x7ffffffffffff
 
 	carry = ((c4l >> 51) | (c4h << 13))
-	h4 := c4l & 0x7ffffffffffff
-	h0 += carry * 19
-	h1 += h0 >> 51
-	h0 &= 0x7ffffffffffff
+	c4l &= 0x7ffffffffffff
+	c0l += carry * 19
+	c1l += c0l >> 51
+	c0l &= 0x7ffffffffffff
 
-	fe[0] = h0
-	fe[1] = h1
-	fe[2] = h2
-	fe[3] = h3
-	fe[4] = h4
+	fe[0] = c0l
+	fe[1] = c1l
+	fe[2] = c2l
+	fe[3] = c3l
+	fe[4] = c4l
 
 	return fe
 }
@@ -157,7 +157,7 @@ func (fe *FieldElement) Square(a *FieldElement) *FieldElement {
 
 	c1l, carry = bits.Add64((c0l>>51)|(c0h<<13), c1l, 0)
 	c1h, _ = bits.Add64(c1h, 0, carry)
-	h0 := c0l & 0x7ffffffffffff
+	c0l &= 0x7ffffffffffff
 
 	c2h, c2l := bits.Mul64(a0, 2*a2)
 	h, l = bits.Mul64(a1, a1)
@@ -169,7 +169,7 @@ func (fe *FieldElement) Square(a *FieldElement) *FieldElement {
 
 	c2l, carry = bits.Add64((c1l>>51)|(c1h<<13), c2l, 0)
 	c2h, _ = bits.Add64(c2h, 0, carry)
-	h1 := c1l & 0x7ffffffffffff
+	c1l &= 0x7ffffffffffff
 
 	c3h, c3l := bits.Mul64(a0, 2*a3)
 	h, l = bits.Mul64(2*a1, a2)
@@ -181,7 +181,7 @@ func (fe *FieldElement) Square(a *FieldElement) *FieldElement {
 
 	c3l, carry = bits.Add64((c2l>>51)|(c2h<<13), c3l, 0)
 	c3h, _ = bits.Add64(c3h, 0, carry)
-	h2 := c2l & 0x7ffffffffffff
+	c2l &= 0x7ffffffffffff
 
 	c4h, c4l := bits.Mul64(a0, 2*a4)
 	h, l = bits.Mul64(a2, a2)
@@ -193,19 +193,19 @@ func (fe *FieldElement) Square(a *FieldElement) *FieldElement {
 
 	c4l, carry = bits.Add64((c3l>>51)|(c3h<<13), c4l, 0)
 	c4h, _ = bits.Add64(c4h, 0, carry)
-	h3 := c3l & 0x7ffffffffffff
+	c3l &= 0x7ffffffffffff
 
 	carry = ((c4l >> 51) | (c4h << 13))
-	h4 := c4l & 0x7ffffffffffff
-	h0 += carry * 19
-	h1 += h0 >> 51
-	h0 &= 0x7ffffffffffff
+	c0l += carry * 19
+	c4l &= 0x7ffffffffffff
+	c1l += c0l >> 51
+	c0l &= 0x7ffffffffffff
 
-	fe[0] = h0
-	fe[1] = h1
-	fe[2] = h2
-	fe[3] = h3
-	fe[4] = h4
+	fe[0] = c0l
+	fe[1] = c1l
+	fe[2] = c2l
+	fe[3] = c3l
+	fe[4] = c4l
 
 	return fe
 }
