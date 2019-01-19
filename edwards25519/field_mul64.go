@@ -134,24 +134,23 @@ func (fe *FieldElement) Square(a *FieldElement) *FieldElement {
 	a2 := a[2]
 	a3 := a[3]
 	a4 := a[4]
-	a3_19 := a3 * 19
-	a4_19 := a4 * 19
+	a4_38 := a4 * 38
 
 	var carry, h, l uint64
 
 	c0h, c0l := bits.Mul64(a0, a0)
-	h, l = bits.Mul64(a4_19, a1*2)
+	h, l = bits.Mul64(a4*38, a1)
 	c0l, carry = bits.Add64(c0l, l, 0)
 	c0h, _ = bits.Add64(c0h, h, carry)
-	h, l = bits.Mul64(a2*2, a3_19)
+	h, l = bits.Mul64(a2*38, a3)
 	c0l, carry = bits.Add64(c0l, l, 0)
 	c0h, _ = bits.Add64(c0h, h, carry)
 
 	c1h, c1l := bits.Mul64(2*a0, a1)
-	h, l = bits.Mul64(2*a2, a4_19)
+	h, l = bits.Mul64(a2, a4_38)
 	c1l, carry = bits.Add64(c1l, l, 0)
 	c1h, _ = bits.Add64(c1h, h, carry)
-	h, l = bits.Mul64(a3_19, a3)
+	h, l = bits.Mul64(a3*19, a3)
 	c1l, carry = bits.Add64(c1l, l, 0)
 	c1h, _ = bits.Add64(c1h, h, carry)
 
@@ -163,7 +162,7 @@ func (fe *FieldElement) Square(a *FieldElement) *FieldElement {
 	h, l = bits.Mul64(a1, a1)
 	c2l, carry = bits.Add64(c2l, l, 0)
 	c2h, _ = bits.Add64(c2h, h, carry)
-	h, l = bits.Mul64(a4_19, a3*2)
+	h, l = bits.Mul64(a4_38, a3)
 	c2l, carry = bits.Add64(c2l, l, 0)
 	c2h, _ = bits.Add64(c2h, h, carry)
 
@@ -175,7 +174,7 @@ func (fe *FieldElement) Square(a *FieldElement) *FieldElement {
 	h, l = bits.Mul64(2*a1, a2)
 	c3l, carry = bits.Add64(c3l, l, 0)
 	c3h, _ = bits.Add64(c3h, h, carry)
-	h, l = bits.Mul64(a4_19, a4)
+	h, l = bits.Mul64(a4*19, a4)
 	c3l, carry = bits.Add64(c3l, l, 0)
 	c3h, _ = bits.Add64(c3h, h, carry)
 
