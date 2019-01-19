@@ -53,7 +53,7 @@ library by
 [Chuengsatiansup](https://perso.ens-lyon.fr/chitchanok.chuengsatiansup/),
 [Ribarski](http://panceribarski.com) and
 [Schwabe](https://cryptojedi.org/peter/index.shtml),
-see [cref/cref.c](cref/cref.c).  The generic field operations borrow
+see [cref/cref.c](cref/cref.c).  The old generic radix 25.5 field operations borrow
 from [Adam Langley](https://www.imperialviolet.org)'s
 [ed25519](http://github.com/agl/ed25519).
 The amd64 optimized field arithmetic are from George Tankersley's
@@ -61,6 +61,7 @@ The amd64 optimized field arithmetic are from George Tankersley's
 which in turn is based on SUPERCOP's
 [amd64-51-30k](https://github.com/floodyberry/supercop/tree/master/crypto_sign/ed25519/amd64-51-30k)
 by Bernstein, Duif, Lange, Schwabe and Yang.
+The new generic radix 51 field operations are also  based on amd64-51-30k.
 The variable-time scalar multiplication code is based on that
 of [curve25519-dalek](https://github.com/dalek-cryptography/curve25519-dalek).
 
