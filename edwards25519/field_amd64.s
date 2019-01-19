@@ -1,4 +1,4 @@
-//+build amd64
+//+build amd64 AND !go1.12
 
 #include "textflag.h"
 

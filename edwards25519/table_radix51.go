@@ -1,3 +1,5 @@
+// +build amd64 go1.12
+
 package edwards25519
 
 var BaseScalarMultTable = ScalarMultTable{[8]NielsPoint{NielsPoint{YPlusX: FieldElement{0x636186c1936d,
