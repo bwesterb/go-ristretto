@@ -157,6 +157,17 @@ func BenchmarkFeSquare(b *testing.B) {
 	}
 }
 
+func BenchmarkFeDoubledSquare(b *testing.B) {
+	var fe edwards25519.FieldElement
+	var bi big.Int
+	bi.Rand(rnd, &bi25519)
+	fe.SetBigInt(&bi)
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		fe.DoubledSquare(&fe)
+	}
+}
+
 func BenchmarkFeMul(b *testing.B) {
 	var fe edwards25519.FieldElement
 	var bi big.Int
