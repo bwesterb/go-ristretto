@@ -43,6 +43,14 @@ fmt.Printf("%v", bytes.Equal(p.Bytes(), p2.Bytes()))
 // true
 ```
 
+Compatibility with `ristretto255` RFC draft
+-------------------------------------------
+
+An [RFC has been proposed](https://datatracker.ietf.org/doc/draft-hdevalence-cfrg-ristretto/)
+to standardise Ristretto over Ed25519.  This RFC is compatible with `go-ristretto`.  There
+is one caveat: one should use `Point.DeriveDalek` instead of `Point.Derive` to derive a point
+from a string.
+
 
 References
 ----------
