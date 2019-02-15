@@ -343,6 +343,23 @@ func (s *Scalar) MulAdd(a, b, c *Scalar) *Scalar {
 		a11*b11)
 }
 
+// Derive sets s to the half-length scalar derived from the given buffer
+// using SHA512.  Returns s
+//
+// Warning: half-length scalars are insecure in almost every application.
+func (s *Scalar) DeriveShort(buf []byte) *Scalar {
+	h := sha512.Sum512(buf)
+	s[0] = load4u32(h[0:])
+	s[1] = load4u32(h[4:])
+	s[2] = load4u32(h[8:])
+	s[3] = load4u32(h[12:])
+	s[4] = 0
+	s[5] = 0
+	s[6] = 0
+	s[7] = 0
+	return s
+}
+
 // Derive sets s to the scalar derived from the given buffer using SHA512 and
 // Scalar.SetReduced()  Returns s.
 func (s *Scalar) Derive(buf []byte) *Scalar {

@@ -206,6 +206,20 @@ func TestScTextMarshaling(t *testing.T) {
 	}
 }
 
+func TestScDeriveShort(t *testing.T) {
+	var s ristretto.Scalar
+	for k, v := range map[string]string{
+		"test1":     "b16ed7d24b3ecbd4164dcdad374e08c000000000000000000000000000000000",
+		"ristretto": "27bf1d7100b6a72bd2b2f43babb948b500000000000000000000000000000000",
+		"decaf":     "39e5d267455abfce52284ac648d4b97100000000000000000000000000000000",
+	} {
+		v2 := hex.EncodeToString(s.DeriveShort([]byte(k)).Bytes())
+		if v != v2 {
+			t.Fatalf("DeriveShort(%s) = %s != %s", k, v, v2)
+		}
+	}
+}
+
 func TestScDerive(t *testing.T) {
 	var s ristretto.Scalar
 	for k, v := range map[string]string{
