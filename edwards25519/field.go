@@ -170,6 +170,14 @@ func (fe *FieldElement) BigInt() *big.Int {
 	return ret.SetBytes(rBuf[:])
 }
 
+// Writes fe as a string for debugging.
+//
+// WARNING This operation is not constant-time.  Do not use for cryptography
+//         unless you're sure this is not an issue.
+func (fe FieldElement) String() string {
+	return fe.BigInt().String()
+}
+
 // Sets fe to x modulo 2^255-19.
 //
 // WARNING Operations on big.Ints are not constant-time: do not use them
@@ -268,6 +276,19 @@ func (fe *FieldElement) InvSqrt(a *FieldElement) *FieldElement {
 
 	fe.Set(&t)
 	fe.ConditionalSet(&t2, 1-chk.IsOneI())
+	return fe
+}
+
+// Sets fe to sqrt(a).  Requires a to be a square.  Returns fe.
+func (fe *FieldElement) Sqrt(a *FieldElement) *FieldElement {
+	var aCopy FieldElement
+	aCopy.Set(a)
+	fe.InvSqrt(a)
+	fe.Mul(fe, &aCopy)
+
+	var feNeg FieldElement
+	feNeg.Neg(fe)
+	fe.ConditionalSet(&feNeg, fe.IsNegativeI())
 	return fe
 }
 

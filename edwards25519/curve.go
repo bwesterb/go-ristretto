@@ -2,6 +2,11 @@
 // Ristretto group is a subquotient.
 package edwards25519
 
+import (
+	"encoding/hex"
+	"fmt"
+)
+
 // (X:Y:Z:T) satisfying x=X/Z, y=Y/Z, X*Y=Z*T.  Aka P3.
 type ExtendedPoint struct {
 	X, Y, Z, T FieldElement
@@ -15,6 +20,11 @@ type CompletedPoint struct {
 // (X:Y:Z) satisfying x=X/Z, y=Y/Z.
 type ProjectivePoint struct {
 	X, Y, Z FieldElement
+}
+
+// (S,T,Z) represents the point (S/Z,T/Z) on the associated Jacobi quartic.
+type ProjectiveJacobiPoint struct {
+	S, T, Z FieldElement
 }
 
 // Set p to (-i,0), a point Ristretto-equivalent to 0.  Returns p.
@@ -485,4 +495,169 @@ func (p *ExtendedPoint) RistrettoEqualsI(q *ExtendedPoint) int32 {
 	x1x2.Mul(&p.X, &q.X)
 	y1y2.Mul(&p.Y, &q.Y)
 	return 1 - ((1 - x1y2.EqualsI(&x2y1)) & (1 - x1x2.EqualsI(&y1y2)))
+}
+
+// Computes the at most 8 positive FieldElements f such that p == elligator2(f).
+// Assumes p is even.
+//
+// Returns a bitmask of which elements in fes are set.
+func (p *ExtendedPoint) RistrettoElligator2Inverse(fes *[8]FieldElement) uint8 {
+	var setMask uint8
+	var p2 ExtendedPoint
+	var jc ProjectiveJacobiPoint
+
+	for j := 0; j < 4; j++ {
+		// The four even points in the same ristretto equivalence class as p
+		// TODO compute equivalence class on the Jacobi quartic which is faster
+		//      than computing it on the Edwards curve.
+		if j == 0 {
+			p2.Set(p)
+		} else if j == 1 {
+			p2.X.Set(&p.X)
+			p2.Y.Set(&p.Y)
+			p2.Z.Neg(&p.Z)
+			p2.T.Set(&p.T)
+		} else if j == 2 {
+			p2.X.Set(&p.Y)
+			p2.Y.Set(&p.X)
+			p2.Z.Mul(&p.Z, &feI)
+			p2.T.Neg(&p.T)
+		} else {
+			p2.X.Set(&p.Y)
+			p2.Y.Set(&p.X)
+			p2.Z.Mul(&p.Z, &feMinusI)
+			p2.T.Neg(&p.T)
+		}
+
+		jc.SetExtended(&p2)
+
+		// TODO make constant-time
+		if jc.Z.IsNonZeroI() == 0 {
+			continue
+		}
+
+		// TODO reuse computation
+		var s, zInv FieldElement
+		zInv.Inverse(&jc.Z)
+		s.Mul(&zInv, &jc.S)
+		sPos := s.IsNegativeI() == 0
+
+		setMask |= uint8(jc.elligator2Inverse(&fes[2*j], sPos) << uint(2*j))
+		jc.Dual(&jc)
+		setMask |= uint8(jc.elligator2Inverse(&fes[2*j+1], !sPos) << uint(2*j+1))
+	}
+	return setMask
+}
+
+// Set p to the point correspoding to q on the associated Jacobi quartic.
+// Returns p.
+func (p *ProjectiveJacobiPoint) SetExtended(q *ExtendedPoint) *ProjectiveJacobiPoint {
+	var Z2, Y2, ZmY, tmp FieldElement
+
+	// TODO - use q.T
+	//      - add constants
+	//      - double-check X=0 cases
+
+	// Z = X sqrt(Z^2 - Y^2)
+	Z2.Square(&q.Z)
+	Y2.Square(&q.Y)
+	tmp.sub(&Z2, &Y2)
+	tmp.Sqrt(&tmp)
+	p.Z.Mul(&q.X, &tmp)
+
+	// S = (Z-Y)X
+	ZmY.sub(&q.Z, &q.Y)
+	p.S.Mul(&ZmY, &q.X)
+
+	// T = 2 Z q.Z (Z-Y) 1/sqrt(-d-1)
+	tmp.double(&feInvSqrtMinusDMinusOne)
+	tmp.Mul(&tmp, &q.Z)
+	tmp.Mul(&tmp, &p.Z)
+	p.T.Mul(&tmp, &ZmY)
+
+	return p
+}
+
+func (p *ProjectiveJacobiPoint) Dual(q *ProjectiveJacobiPoint) *ProjectiveJacobiPoint {
+	p.S.Neg(&q.S)
+	p.T.Neg(&q.T)
+	p.Z.Set(&q.Z)
+	return p
+}
+
+func (p *ProjectiveJacobiPoint) elligator2Inverse(fe *FieldElement, sPos bool) int {
+	var x, y, dP1, dP1InvDM1, a, a2, S2, S4, Z2, invSqY FieldElement
+
+	// TODO make constant-time
+
+	if p.Z.IsNonZeroI() == 0 {
+		return 0
+	}
+
+	Z2.Square(&p.Z)
+
+	if p.S.IsNonZeroI() == 0 {
+		if p.T.EqualsI(&Z2) == 0 {
+			return 0
+		}
+		// TODO add constant for sqrt(i*d)
+		fe.Mul(&feI, &feD)
+		fe.Sqrt(fe)
+		return 1
+	}
+
+	// TODO add constant for (d+1)/(d-1)
+	dP1.add(&feD, &feOne)
+	dP1InvDM1.sub(&feD, &feOne)
+	dP1InvDM1.Inverse(&dP1InvDM1)
+	dP1InvDM1.Mul(&dP1InvDM1, &dP1)
+
+	S2.Square(&p.S)
+	S4.Square(&S2)
+	a.add(&p.T, &Z2)
+	a.Mul(&a, &dP1InvDM1)
+	a2.Square(&a)
+
+	invSqY.sub(&S4, &a2)
+	invSqY.Mul(&invSqY, &feI)
+
+	if y.InvSqrtI(&invSqY) == 0 {
+		return 0
+	}
+
+	if sPos {
+		x.add(&a, &S2)
+	} else {
+		x.sub(&a, &S2)
+	}
+	x.Mul(&x, &y)
+
+	if x.IsNegativeI() == 1 {
+		fe.Neg(&x)
+	} else {
+		fe.Set(&x)
+	}
+	return 1
+}
+
+// WARNING This operation is not constant-time.  Do not use for cryptography
+//         unless you're sure this is not an issue.
+func (p *ExtendedPoint) String() string {
+	return fmt.Sprintf("ExtendedPoint(%v, %v, %v, %v; %v)",
+		p.X, p.Y, p.Z, p.T, hex.EncodeToString(p.Ristretto()))
+}
+
+// WARNING This operation is not constant-time.  Do not use for cryptography
+//         unless you're sure this is not an issue.
+func (p *CompletedPoint) String() string {
+	var ep ExtendedPoint
+	ep.SetCompleted(p)
+	return fmt.Sprintf("CompletedPoint(%v, %v, %v, %v; %v)",
+		p.X, p.Y, p.Z, p.T, hex.EncodeToString(ep.Ristretto()))
+}
+
+// WARNING This operation is not constant-time.  Do not use for cryptography
+//         unless you're sure this is not an issue.
+func (p *ProjectiveJacobiPoint) String() string {
+	return fmt.Sprintf("ProjectiveJacobiPoint(%v, %v, %v)", p.S, p.T, p.Z)
 }
