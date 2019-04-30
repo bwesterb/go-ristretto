@@ -290,16 +290,16 @@ func TestRistrettoElligator2Inverse(t *testing.T) {
 
 func BenchmarkElligatorPlusInverse(b *testing.B) {
 	var fe edwards25519.FieldElement
-    var fs [8]edwards25519.FieldElement
+	var fs [8]edwards25519.FieldElement
 	var ep edwards25519.ExtendedPoint
 	var cp edwards25519.CompletedPoint
 	var buf [32]byte
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-        rnd.Read(buf[:])
-        buf[0] &= 254
-        buf[31] &= 127
-        fe.SetBytes(&buf)
+		rnd.Read(buf[:])
+		buf[0] &= 254
+		buf[31] &= 127
+		fe.SetBytes(&buf)
 		cp.SetRistrettoElligator2(&fe)
 		ep.SetCompleted(&cp)
 		ep.RistrettoElligator2Inverse(&fs)

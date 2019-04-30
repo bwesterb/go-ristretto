@@ -27,7 +27,9 @@ package ristretto
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/sha512"
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -186,6 +188,65 @@ func (p *Point) Derive(buf []byte) *Point {
 	h := sha512.Sum512(buf)
 	copy(ptBuf[:], h[:32])
 	return p.SetElligator(&ptBuf)
+}
+
+// Encode 16 bytes into a point using the Lizard method.
+//
+// Use Lizard() or LizardInto() to decode the bytes from a point.
+//
+// There is a 1 in 2^125 chance that an encoded point cannot be properly
+// decoded.
+func (p *Point) SetLizard(data *[16]byte) *Point {
+	var fe edwards25519.FieldElement
+	var cp edwards25519.CompletedPoint
+	buf := sha256.Sum256(data[:])
+	copy(buf[8:], data[:])
+	buf[0] &= 254 // clear lowest bit to make the FieldElement positive
+	buf[31] &= 63 // clear highest two bits to ensure below 2^255-19.
+	fe.SetBytes(&buf)
+	cp.SetRistrettoElligator2(&fe)
+	p.e().SetCompleted(&cp)
+	return p
+}
+
+// Decodes 16 bytes encoded into this point using SetLizard().
+//
+// Returns nil if no point was encoded.
+func (p *Point) Lizard() []byte {
+	var ret [16]byte
+	if p.LizardInto(&ret) != nil {
+		return nil
+	}
+	return ret[:]
+}
+
+// Decodes 16 bytes into the given buffer  encoded into this point
+// using SetLizard().
+func (p *Point) LizardInto(buf *[16]byte) error {
+	var fes [8]edwards25519.FieldElement
+	var buf2 [32]byte
+	var nFound uint8
+
+	mask := p.e().RistrettoElligator2Inverse(&fes)
+
+	for j := 0; j < 8; j++ {
+		ok := (mask >> uint(j)) & 1
+		fes[j].BytesInto(&buf2)
+		h := sha256.Sum256(buf2[8:24])
+		copy(h[8:], buf2[8:24])
+		h[0] &= 254
+		h[31] &= 63
+		ok &= uint8(subtle.ConstantTimeCompare(h[:], buf2[:]))
+		subtle.ConstantTimeCopy(int(ok), buf[:], buf2[8:24])
+		nFound += ok
+	}
+	if nFound == 1 {
+		return nil
+	}
+	if nFound == 0 {
+		return errors.New("No Lizard preimage")
+	}
+	return errors.New("Multiple Lizard preimages")
 }
 
 // Returns 1 if p == q and 0 otherwise.
