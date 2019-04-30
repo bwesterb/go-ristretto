@@ -531,10 +531,7 @@ func (p *ExtendedPoint) RistrettoElligator2Inverse(fes *[8]FieldElement) uint8 {
 
 		jc.SetExtended(&p2)
 
-		// TODO make constant-time
-		if jc.Z.IsNonZeroI() == 0 {
-			continue
-		}
+		ok := int(jc.Z.IsNonZeroI())
 
 		// TODO reuse computation
 		var s, zInv FieldElement
@@ -542,9 +539,9 @@ func (p *ExtendedPoint) RistrettoElligator2Inverse(fes *[8]FieldElement) uint8 {
 		s.Mul(&zInv, &jc.S)
 		sPos := s.IsNegativeI() == 0
 
-		setMask |= uint8(jc.elligator2Inverse(&fes[2*j], sPos) << uint(2*j))
+		setMask |= uint8(jc.elligator2Inverse(&fes[2*j], sPos) & ok << uint(2*j))
 		jc.Dual(&jc)
-		setMask |= uint8(jc.elligator2Inverse(&fes[2*j+1], !sPos) << uint(2*j+1))
+		setMask |= uint8(jc.elligator2Inverse(&fes[2*j+1], !sPos) & ok << uint(2*j+1))
 	}
 	return setMask
 }
