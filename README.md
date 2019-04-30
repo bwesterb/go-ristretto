@@ -75,3 +75,4 @@ of [curve25519-dalek](https://github.com/dalek-cryptography/curve25519-dalek).
 
 ### other platforms
 * [Rust](https://github.com/dalek-cryptography/curve25519-dalek)
+* [Javascript](https://github.com/jedisct1/wasm-crypto)
