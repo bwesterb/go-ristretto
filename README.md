@@ -75,3 +75,5 @@ of [curve25519-dalek](https://github.com/dalek-cryptography/curve25519-dalek).
 
 ### other platforms
 * [Rust](https://github.com/dalek-cryptography/curve25519-dalek)
+* [Javascript](https://github.com/jedisct1/wasm-crypto)
+* [C (part of `libsodium`)](https://libsodium.gitbook.io/doc/advanced/point-arithmetic/ristretto)
