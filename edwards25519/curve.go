@@ -537,11 +537,11 @@ func (p *ExtendedPoint) RistrettoElligator2Inverse(fes *[8]FieldElement) uint8 {
 		var s, zInv FieldElement
 		zInv.Inverse(&jc.Z)
 		s.Mul(&zInv, &jc.S)
-		sPos := s.IsNegativeI() == 0
+		sPos := 1 - s.IsNegativeI()
 
 		setMask |= uint8(jc.elligator2Inverse(&fes[2*j], sPos) & ok << uint(2*j))
 		jc.Dual(&jc)
-		setMask |= uint8(jc.elligator2Inverse(&fes[2*j+1], !sPos) & ok << uint(2*j+1))
+		setMask |= uint8(jc.elligator2Inverse(&fes[2*j+1], 1-sPos) & ok << uint(2*j+1))
 	}
 	return setMask
 }
@@ -581,24 +581,19 @@ func (p *ProjectiveJacobiPoint) Dual(q *ProjectiveJacobiPoint) *ProjectiveJacobi
 	return p
 }
 
-func (p *ProjectiveJacobiPoint) elligator2Inverse(fe *FieldElement, sPos bool) int {
-	var x, y, a, a2, S2, S4, Z2, invSqY FieldElement
+func (p *ProjectiveJacobiPoint) elligator2Inverse(fe *FieldElement, sPos int32) int {
+	var x, y, a, a2, S2, S4, Z2, invSqY, negS2 FieldElement
 
-	// TODO make constant-time
-
-	if p.Z.IsNonZeroI() == 0 {
-		return 0
-	}
+	ret := p.Z.IsNonZeroI()
+	done := int32(0)
 
 	Z2.Square(&p.Z)
 
-	if p.S.IsNonZeroI() == 0 {
-		if p.T.EqualsI(&Z2) == 0 {
-			return 0
-		}
-		fe.Set(&feSqrtID)
-		return 1
-	}
+	sNonZero := p.S.IsNonZeroI()
+	tEqualsZ2 := p.T.EqualsI(&Z2)
+	ret &= 1 - ((1 - sNonZero) & (1 - tEqualsZ2))
+	fe.ConditionalSet(&feSqrtID, 1-sNonZero)
+	done = 1 - sNonZero
 
 	S2.Square(&p.S)
 	S4.Square(&S2)
@@ -609,23 +604,18 @@ func (p *ProjectiveJacobiPoint) elligator2Inverse(fe *FieldElement, sPos bool) i
 	invSqY.sub(&S4, &a2)
 	invSqY.Mul(&invSqY, &feI)
 
-	if y.InvSqrtI(&invSqY) == 0 {
-		return 0
-	}
+	sq := y.InvSqrtI(&invSqY)
+	ret &= sq
+	done |= 1 - sq
 
-	if sPos {
-		x.add(&a, &S2)
-	} else {
-		x.sub(&a, &S2)
-	}
+	negS2.Neg(&S2)
+	S2.ConditionalSet(&negS2, 1-sPos)
+	x.add(&a, &S2)
 	x.Mul(&x, &y)
 
-	if x.IsNegativeI() == 1 {
-		fe.Neg(&x)
-	} else {
-		fe.Set(&x)
-	}
-	return 1
+	x.Abs(&x)
+	fe.ConditionalSet(&x, 1-done)
+	return int(ret)
 }
 
 // WARNING This operation is not constant-time.  Do not use for cryptography
