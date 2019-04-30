@@ -59,6 +59,12 @@ var (
 		-6350812, 7122893, -15485473, -16089458, 3776289,
 	}
 
+	// sqrt(i*d)
+	feSqrtID = FieldElement{
+		-27518040, 701139, 28659366, -9930925, -13176155,
+		-1348074, -30782278, -9245017, 26167231, 1494357,
+	}
+
 	epZero = ExtendedPoint{feZero, feOne, feOne, feZero}
 
 	epBase = ExtendedPoint{

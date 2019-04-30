@@ -552,7 +552,6 @@ func (p *ProjectiveJacobiPoint) SetExtended(q *ExtendedPoint) *ProjectiveJacobiP
 	var Z2, Y2, ZmY, tmp FieldElement
 
 	// TODO - use q.T
-	//      - add constants
 	//      - double-check X=0 cases
 
 	// Z = X sqrt(Z^2 - Y^2)
@@ -597,9 +596,7 @@ func (p *ProjectiveJacobiPoint) elligator2Inverse(fe *FieldElement, sPos bool) i
 		if p.T.EqualsI(&Z2) == 0 {
 			return 0
 		}
-		// TODO add constant for sqrt(i*d)
-		fe.Mul(&feI, &feD)
-		fe.Sqrt(fe)
+		fe.Set(&feSqrtID)
 		return 1
 	}
 

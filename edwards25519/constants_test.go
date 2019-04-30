@@ -11,6 +11,13 @@ func TestFeConstants(t *testing.T) {
 	dP1InvDM1.Inverse(&dP1InvDM1)
 	dP1InvDM1.Mul(&dP1InvDM1, &dP1)
 	if dP1InvDM1.EqualsI(&feDp1OverDm1) != 1 {
-		t.Fatalf("feDp1OverDm1: %v != %v", &feDp1OverDm1, dP1InvDM1)
+		t.Fatalf("feDp1OverDm1: %v != %v", &feDp1OverDm1, &dP1InvDM1)
+	}
+
+	var sqrtID FieldElement
+	sqrtID.Mul(&feI, &feD)
+	sqrtID.Sqrt(&sqrtID)
+	if sqrtID.EqualsI(&feSqrtID) != 1 {
+		t.Fatalf("sqrtID: %v != %v", &feSqrtID, &sqrtID)
 	}
 }

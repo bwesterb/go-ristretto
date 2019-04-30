@@ -60,6 +60,12 @@ var (
 		1212587319275468, 253422448836237,
 	}
 
+	// sqrt(i*d)
+	feSqrtID = FieldElement{
+		2298852427963285, 3837146560810661, 4413131899466403,
+		3883177008057528, 2352084440532925,
+	}
+
 	epZero = ExtendedPoint{feZero, feOne, feOne, feZero}
 
 	epBase = ExtendedPoint{
