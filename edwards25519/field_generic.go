@@ -53,6 +53,12 @@ var (
 		7397348, -27922721, 1766195, -24433858, 672203,
 	}
 
+	// (d+1)/(d-1)
+	feDp1OverDm1 = FieldElement{
+		-8275156, -1370137, -4651792, -7444191, 19032992,
+		-6350812, 7122893, -15485473, -16089458, 3776289,
+	}
+
 	epZero = ExtendedPoint{feZero, feOne, feOne, feZero}
 
 	epBase = ExtendedPoint{

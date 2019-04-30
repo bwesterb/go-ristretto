@@ -583,7 +583,7 @@ func (p *ProjectiveJacobiPoint) Dual(q *ProjectiveJacobiPoint) *ProjectiveJacobi
 }
 
 func (p *ProjectiveJacobiPoint) elligator2Inverse(fe *FieldElement, sPos bool) int {
-	var x, y, dP1, dP1InvDM1, a, a2, S2, S4, Z2, invSqY FieldElement
+	var x, y, a, a2, S2, S4, Z2, invSqY FieldElement
 
 	// TODO make constant-time
 
@@ -603,16 +603,10 @@ func (p *ProjectiveJacobiPoint) elligator2Inverse(fe *FieldElement, sPos bool) i
 		return 1
 	}
 
-	// TODO add constant for (d+1)/(d-1)
-	dP1.add(&feD, &feOne)
-	dP1InvDM1.sub(&feD, &feOne)
-	dP1InvDM1.Inverse(&dP1InvDM1)
-	dP1InvDM1.Mul(&dP1InvDM1, &dP1)
-
 	S2.Square(&p.S)
 	S4.Square(&S2)
 	a.add(&p.T, &Z2)
-	a.Mul(&a, &dP1InvDM1)
+	a.Mul(&a, &feDp1OverDm1)
 	a2.Square(&a)
 
 	invSqY.sub(&S4, &a2)
