@@ -506,30 +506,55 @@ func (p *ExtendedPoint) RistrettoElligator2Inverse(fes *[8]FieldElement) uint8 {
 	var p2 ExtendedPoint
 	var jc ProjectiveJacobiPoint
 
+	// Elligator2 computes a Point from a FieldElement in two steps: first
+	// it computes a (s,t) on the Jacobi quartic and then computes the
+	// corresponding even point on the Edwards curve.
+	//
+	// We invert in three steps.  Any Ristretto point has four representatives
+	// as even Edwards points.  For each of those even Edwards points,
+	// there are two points on the Jacobi quartic that map to it.
+	// Each of those eight points on the Jacobi quartic might have an
+	// Elligator2 preimage.
+	//
+	// Essentially we first loop over the four representatives of our point,
+	// then for each of them consider both points on the Jacobi quartic and
+	// check whether they have an inverse under Elligator2.  We take a few
+	// shortcuts though.
+	//
+	//  1. We only compute two Jacobi quartic points directly from the
+	//     the representatives.  The other two can be derived from them.
+	//  2. We reuse knowledge of positivity of s in the point (s,t) on
+	//     the Jacobi Quartic for the dual point (-s,-t).
+
 	for j := 0; j < 4; j++ {
-		// The four even points in the same ristretto equivalence class as p
-		// TODO compute equivalence class on the Jacobi quartic which is faster
-		//      than computing it on the Edwards curve.
+		// We loop over the four even points in the same Ristretto equivalence
+		// class as p = (x, y).
+		//
+		//    j == 0    p itself
+		//    j == 1    (-x, -y)
+		//    j == 2    (iy, ix)
+		//    j == 3    (-iy, -ix)
+		//
+		// For each we compute the jacobi point.  For j == 0 and j == 2 we do
+		// this directly from the representative.  For j == 1 we use the one
+		// computed from j == 0 and similarly with j == 3.
 		if j == 0 {
-			p2.Set(p)
-		} else if j == 1 {
-			p2.X.Set(&p.X)
-			p2.Y.Set(&p.Y)
-			p2.Z.Neg(&p.Z)
-			p2.T.Set(&p.T)
+			p2.Set(p) // First one is p itself.
 		} else if j == 2 {
 			p2.X.Set(&p.Y)
 			p2.Y.Set(&p.X)
 			p2.Z.Mul(&p.Z, &feI)
 			p2.T.Neg(&p.T)
-		} else {
-			p2.X.Set(&p.Y)
-			p2.Y.Set(&p.X)
-			p2.Z.Mul(&p.Z, &feMinusI)
-			p2.T.Neg(&p.T)
 		}
 
-		jc.SetExtended(&p2)
+		if j == 0 || j == 2 {
+			jc.SetExtended(&p2)
+		} else { // j == 1 or j == 3
+			jc2 := jc
+			jc.S.Set(&jc2.Z)
+			jc.T.Neg(&jc2.T)
+			jc.Z.Set(&jc2.S)
+		}
 
 		ok := int(jc.Z.IsNonZeroI())
 
