@@ -151,7 +151,7 @@ func (p *CompletedPoint) SetRistrettoElligator2(r0 *FieldElement) *CompletedPoin
 	sgn.ConditionalSet(&feMinusOne, 1-b)
 	sqrt.Mul(&sqrt, &twiddle)
 
-	// s = N * sqrt(N*D) * twiddle
+	// s = N * sqrt * twiddle
 	s.Mul(&sqrt, &N)
 
 	// t = -sgn * sqrt * s * (r-1) * (d-1)^2 - 1
@@ -581,6 +581,17 @@ func (p *ProjectiveJacobiPoint) Dual(q *ProjectiveJacobiPoint) *ProjectiveJacobi
 	return p
 }
 
+// Elligator2 is defined in two steps: first a field element is converted
+// to a point (s,t) on the Jacobi quartic associated to the Edwards curve.
+// Then this point is mapped to a point on the Edwards curve.
+// This function computes a field element that is mapped to a given (s,t)
+// with Elligator2 if it exists.
+//
+// sPos should be 1 if s is positive and 0 if it is not.
+// (A ProjectiveJacobiPoint doesn't store s directly, but rather Z and S
+// with S = s Z and so it is expensive to check whether s is positive.)
+//
+// Returns 1 if a preimage is found and 0 if none exists.
 func (p *ProjectiveJacobiPoint) elligator2Inverse(fe *FieldElement, sPos int32) int {
 	var x, y, a, a2, S2, S4, Z2, invSqY, negS2 FieldElement
 
@@ -589,30 +600,36 @@ func (p *ProjectiveJacobiPoint) elligator2Inverse(fe *FieldElement, sPos int32) 
 
 	Z2.Square(&p.Z)
 
+	// Special case: S = 0.  If S is zero, either t = 1 or t = -1.
+	// If t=1, then sqrt(i*d) is the preimage.  There is no preimage if t=-1.
 	sNonZero := p.S.IsNonZeroI()
-	tEqualsZ2 := p.T.EqualsI(&Z2)
+	tEqualsZ2 := p.T.EqualsI(&Z2) // T = Z^2 if and only if t = 1
 	ret &= 1 - ((1 - sNonZero) & (1 - tEqualsZ2))
 	fe.ConditionalSet(&feSqrtID, 1-sNonZero)
 	done = 1 - sNonZero
 
-	S2.Square(&p.S)
-	S4.Square(&S2)
+	// a := (T + Z^2) (d+1)/(d-1) = (t+1) (d+1)/(d-1)
 	a.add(&p.T, &Z2)
 	a.Mul(&a, &feDp1OverDm1)
 	a2.Square(&a)
 
+	// y := 1/sqrt(i (S^4 - a^2)).
+	S2.Square(&p.S)
+	S4.Square(&S2)
 	invSqY.sub(&S4, &a2)
 	invSqY.Mul(&invSqY, &feI)
 
 	sq := y.InvSqrtI(&invSqY)
-	ret &= sq
+	ret &= sq // there is no preimage if the square root does not exist
 	done |= 1 - sq
 
+	// x := (a + sign(s)*S^2) y
 	negS2.Neg(&S2)
 	S2.ConditionalSet(&negS2, 1-sPos)
 	x.add(&a, &S2)
 	x.Mul(&x, &y)
 
+	// fe := abs(x)
 	x.Abs(&x)
 	fe.ConditionalSet(&x, 1-done)
 	return int(ret)
