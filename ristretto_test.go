@@ -155,12 +155,12 @@ func TestLizardInjective(t *testing.T) {
 	}
 }
 
-func BenchmarkLizardEncodeThenDecode(b *testing.B) {
-	var buf [16]byte
+func BenchmarkLizardDecode(b *testing.B) {
+	buf := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	var p ristretto.Point
+	p.SetLizard(&buf)
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		rnd.Read(buf[:])
-		p.SetLizard(&buf)
 		p.Lizard()
 	}
 }
