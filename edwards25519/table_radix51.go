@@ -1,4 +1,4 @@
-// +build amd64 go1.12
+// +build amd64,!forcegeneric go1.12,!forcegeneric
 
 package edwards25519
 
