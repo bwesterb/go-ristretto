@@ -91,10 +91,19 @@ func TestRistrettoElligator2Inverse(t *testing.T) {
 	var fs [8]edwards25519.FieldElement
 	for i := 0; i < 1000; i++ {
 		ok := true
-		rnd.Read(buf[:])
-		buf[31] &= 127
-		buf[0] &= 254
-		fe.SetBytes(&buf)
+		if i == 0 {
+			fe.SetZero()
+		} else if i == 1 {
+			fe.SetBytes(&[32]byte{
+				168, 27, 92, 74, 203, 42, 48, 117, 170, 109, 234, 14, 45, 169, 188, 205,
+				21, 110, 235, 115, 153, 84, 52, 117, 151, 235, 123, 244, 88, 85, 179, 5,
+			})
+		} else {
+			rnd.Read(buf[:])
+			buf[31] &= 127
+			buf[0] &= 254
+			fe.SetBytes(&buf)
+		}
 		cp.SetRistrettoElligator2(&fe)
 		ep.SetCompleted(&cp)
 		setMask := ep.RistrettoElligator2Inverse(&fs)
@@ -116,7 +125,12 @@ func TestRistrettoElligator2Inverse(t *testing.T) {
 			count++
 		}
 		if !foundOriginal {
-			t.Logf("Missing original %v among %d preimage(s)", &fe, count)
+			t.Logf("Missing original %v among %d preimage(s):", &fe, count)
+			for j := 0; j < 8; j++ {
+				if (1 << uint(j) & setMask) != 0 {
+					t.Logf(" %d: %v", j, &fs[j])
+				}
+			}
 			ok = false
 		}
 		if !ok {

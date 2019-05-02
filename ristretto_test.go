@@ -141,10 +141,13 @@ func TestLizardVectors(t *testing.T) {
 
 func TestLizardInjective(t *testing.T) {
 	var buf1, buf2 [16]byte
+	var buf [32]byte
 	var p ristretto.Point
 	for i := 0; i < 1000; i++ {
 		rnd.Read(buf1[:])
 		p.SetLizard(&buf1)
+		p.BytesInto(&buf)
+		p.SetBytes(&buf)
 		err := p.LizardInto(&buf2)
 		if err != nil {
 			t.Fatalf("LizardInto: %v", err)

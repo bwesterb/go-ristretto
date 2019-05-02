@@ -62,13 +62,12 @@ func (p *ExtendedPoint) ToJacobiQuarticRistretto(qs *[4]JacobiPoint) *ExtendedPo
 	p2.T.Neg(&p.T)
 
 	p.toJacobiQuarticRistretto2(&qs[0], &qs[1])
-	p2.toJacobiQuarticRistretto2(&qs[1], &qs[2])
+	p2.toJacobiQuarticRistretto2(&qs[2], &qs[3])
 	return p
 }
 
 // Like ToJacobiQuarticRistretto, but only computes for (x,y) and (-x,-y).
 func (p *ExtendedPoint) toJacobiQuarticRistretto2(q1, q2 *JacobiPoint) *ExtendedPoint {
-	// TODO case X=0
 	var X2, X2Z2mY2, den, ZpY, ZmY, sOverX, tmp, spOverXp FieldElement
 
 	X2.Square(&p.X)
@@ -99,6 +98,12 @@ func (p *ExtendedPoint) toJacobiQuarticRistretto2(q1, q2 *JacobiPoint) *Extended
 	q1.T.Mul(&tmp, &sOverX)
 	q2.T.Mul(&tmp, &spOverXp)
 
+	// Special case: if X=0 then we are currently set to return q1=(0,0)
+	// and q2=(0,0), but we should return q1=(0,1) q2=(0,1).
+	xIsZero := 1 - X2.IsNonZeroI()
+	q1.T.ConditionalSet(&feOne, xIsZero)
+	q2.T.ConditionalSet(&feOne, xIsZero)
+
 	return p
 }
 
@@ -117,16 +122,17 @@ func (p *JacobiPoint) Dual(q *JacobiPoint) *JacobiPoint {
 //
 // Returns 1 if a preimage is found and 0 if none exists.
 func (p *JacobiPoint) elligator2Inverse(fe *FieldElement) int {
-	var x, y, a, a2, S2, S4, invSqiY, negS2 FieldElement
+	var x, y, a, a2, S2, S4, invSqiY, negS2, out FieldElement
 
-	// TODO unittests
 	// Special case: s = 0.  If s is zero, either t = 1 or t = -1.
-	// If t=1, then sqrt(i*d) is the preimage.  There is no preimage if t=-1.
+	// If t=1, then sqrt(i*d) is the preimage.  Otherwise it's 0.
+
 	sNonZero := p.S.IsNonZeroI()
 	tEqualsOne := p.T.EqualsI(&feOne)
-	fe.ConditionalSet(&feSqrtID, 1-sNonZero)
+	out.Set(&feZero)
+	out.ConditionalSet(&feSqrtID, tEqualsOne)
 
-	ret := 1 - ((1 - sNonZero) & (1 - tEqualsOne))
+	ret := 1 - sNonZero
 	done := 1 - sNonZero
 
 	// a := (t+1) (d+1)/(d-1)
@@ -141,7 +147,7 @@ func (p *JacobiPoint) elligator2Inverse(fe *FieldElement) int {
 
 	// there is no preimage of the square root of i*(s^4-a^2) does not exist
 	sq := y.InvSqrtI(&invSqiY)
-	ret &= 1 - sq
+	ret |= 1 - sq
 	done |= sq
 
 	// x := (a + sign(s)*s^2) y
@@ -152,7 +158,9 @@ func (p *JacobiPoint) elligator2Inverse(fe *FieldElement) int {
 
 	// fe := abs(x)
 	x.Abs(&x)
-	fe.ConditionalSet(&x, 1-done)
+	out.ConditionalSet(&x, 1-done)
+	fe.Set(&out)
+
 	return int(ret)
 }
 
