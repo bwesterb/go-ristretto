@@ -20,4 +20,11 @@ func TestFeConstants(t *testing.T) {
 	if sqrtID.EqualsI(&feSqrtID) != 1 {
 		t.Fatalf("sqrtID: %v != %v", &feSqrtID, &sqrtID)
 	}
+
+	var doubleInvSqrtMinusDMinusOne FieldElement
+	doubleInvSqrtMinusDMinusOne.Add(&feInvSqrtMinusDMinusOne, &feInvSqrtMinusDMinusOne)
+	if doubleInvSqrtMinusDMinusOne.EqualsI(&feDoubleInvSqrtMinusDMinusOne) != 1 {
+		t.Fatalf("doubleInvSqrtMinusDMinusOne: %v != %v",
+			feDoubleInvSqrtMinusDMinusOne, doubleInvSqrtMinusDMinusOne)
+	}
 }

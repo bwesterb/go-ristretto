@@ -95,8 +95,7 @@ func (p *ExtendedPoint) toJacobiQuarticRistretto2(q1, q2 *JacobiPoint) *Extended
 
 	// t := 2/sqrt(-d-1) * Z *  sOverX
 	// tp := 2/sqrt(-d-1) * Z * spOverXp
-	tmp.double(&feInvSqrtMinusDMinusOne)
-	tmp.Mul(&tmp, &p.Z)
+	tmp.Mul(&feDoubleInvSqrtMinusDMinusOne, &p.Z)
 	q1.T.Mul(&tmp, &sOverX)
 	q2.T.Mul(&tmp, &spOverXp)
 
@@ -164,8 +163,7 @@ func (p *CompletedPoint) SetJacobiQuartic(jc *JacobiPoint) *CompletedPoint {
 	s2.Square(&jc.S)
 
 	// Set x to s * 2/sqrt(-d-1)
-	p.X.double(&jc.S)
-	p.X.Mul(&p.X, &feInvSqrtMinusDMinusOne)
+	p.X.Mul(&jc.S, &feDoubleInvSqrtMinusDMinusOne)
 
 	// Set z to t
 	p.Z.Set(&jc.T)
