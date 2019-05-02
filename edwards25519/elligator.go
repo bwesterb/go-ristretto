@@ -69,23 +69,22 @@ func (p *ExtendedPoint) ToJacobiQuarticRistretto(qs *[4]JacobiPoint) *ExtendedPo
 // Like ToJacobiQuarticRistretto, but only computes for (x,y) and (-x,-y).
 func (p *ExtendedPoint) toJacobiQuarticRistretto2(q1, q2 *JacobiPoint) *ExtendedPoint {
 	// TODO case X=0
-	var Z2, Y2, X2, X2Z2mY2, den, ZpY, ZmY, sOverX, tmp, spOverXp FieldElement
+	var X2, X2Z2mY2, den, ZpY, ZmY, sOverX, tmp, spOverXp FieldElement
 
 	X2.Square(&p.X)
-	Y2.Square(&p.Y)
-	Z2.Square(&p.Z)
 
-	// den := 1/sqrt(X^2 (Z^2 - Y^2))    (TODO: T)
-	X2Z2mY2.sub(&Z2, &Y2)
-	X2Z2mY2.Mul(&X2, &X2Z2mY2)
+	ZmY.sub(&p.Z, &p.Y)
+	ZpY.add(&p.Z, &p.Y)
+
+	// den := 1/sqrt(X^2 (Z^2 - Y^2))
+	X2Z2mY2.Mul(&ZmY, &ZpY)
+	X2Z2mY2.Mul(&X2Z2mY2, &X2)
 	den.InvSqrt(&X2Z2mY2)
 
 	// sOverX := den * (Z-Y)
-	ZmY.sub(&p.Z, &p.Y)
 	sOverX.Mul(&den, &ZmY)
 
 	// spOverXp := den * (Z+Y)
-	ZpY.add(&p.Z, &p.Y)
 	spOverXp.Mul(&den, &ZpY)
 
 	// s := sOverX * X
