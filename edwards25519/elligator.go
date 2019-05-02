@@ -4,9 +4,10 @@ import (
 	"fmt"
 )
 
-// (S,T,Z) represents the point (S/Z,T/Z) on the associated Jacobi quartic.
-type ProjectiveJacobiPoint struct {
-	S, T, Z FieldElement
+// Represents a point (s, t) on the Jacobi quartic associated to
+// the Edwards curve
+type JacobiPoint struct {
+	S, T FieldElement
 }
 
 // Computes the at most 8 positive FieldElements f such that p == elligator2(f).
@@ -15,8 +16,8 @@ type ProjectiveJacobiPoint struct {
 // Returns a bitmask of which elements in fes are set.
 func (p *ExtendedPoint) RistrettoElligator2Inverse(fes *[8]FieldElement) uint8 {
 	var setMask uint8
-	var p2 ExtendedPoint
-	var jc ProjectiveJacobiPoint
+	var jcs [4]JacobiPoint
+	var jc JacobiPoint
 
 	// Elligator2 computes a Point from a FieldElement in two steps: first
 	// it computes a (s,t) on the Jacobi quartic and then computes the
@@ -30,91 +31,83 @@ func (p *ExtendedPoint) RistrettoElligator2Inverse(fes *[8]FieldElement) uint8 {
 	//
 	// Essentially we first loop over the four representatives of our point,
 	// then for each of them consider both points on the Jacobi quartic and
-	// check whether they have an inverse under Elligator2.  We take a few
-	// shortcuts though.
+	// check whether they have an inverse under Elligator2.  We take the
+	// following shortcut though.
 	//
-	//  1. We only compute two Jacobi quartic points directly from the
-	//     the representatives.  The other two can be derived from them.
-	//  2. We reuse knowledge of positivity of s in the point (s,t) on
-	//     the Jacobi Quartic for the dual point (-s,-t).
+	//  We can compute two Jacobi quartic points for (x,y) and (-x,-y)
+	//  at the same time.  The four Jacobi quartic points are two of
+	//  such pairs.
+
+	p.ToJacobiQuarticRistretto(&jcs)
 
 	for j := 0; j < 4; j++ {
-		// We loop over the four even points in the same Ristretto equivalence
-		// class as p = (x, y).
-		//
-		//    j == 0    p itself
-		//    j == 1    (-x, -y)
-		//    j == 2    (iy, ix)
-		//    j == 3    (-iy, -ix)
-		//
-		// For each we compute the jacobi point.  For j == 0 and j == 2 we do
-		// this directly from the representative.  For j == 1 we use the one
-		// computed from j == 0 and similarly with j == 3.
-		if j == 0 {
-			p2.Set(p) // First one is p itself.
-		} else if j == 2 {
-			p2.X.Set(&p.Y)
-			p2.Y.Set(&p.X)
-			p2.Z.Mul(&p.Z, &feI)
-			p2.T.Neg(&p.T)
-		}
-
-		if j == 0 || j == 2 {
-			jc.SetExtended(&p2)
-		} else { // j == 1 or j == 3
-			jc2 := jc
-			jc.S.Set(&jc2.Z)
-			jc.T.Neg(&jc2.T)
-			jc.Z.Set(&jc2.S)
-		}
-
-		ok := int(jc.Z.IsNonZeroI())
-
-		// TODO reuse computation
-		var s, zInv FieldElement
-		zInv.Inverse(&jc.Z)
-		s.Mul(&zInv, &jc.S)
-		sPos := 1 - s.IsNegativeI()
-
-		setMask |= uint8(jc.elligator2Inverse(&fes[2*j], sPos) & ok << uint(2*j))
-		jc.Dual(&jc)
-		setMask |= uint8(jc.elligator2Inverse(&fes[2*j+1], 1-sPos) & ok << uint(2*j+1))
+		setMask |= uint8(jcs[j].elligator2Inverse(&fes[2*j]) << uint(2*j))
+		jc.Dual(&jcs[j])
+		setMask |= uint8(jc.elligator2Inverse(&fes[2*j+1]) << uint(2*j+1))
 	}
+
 	return setMask
 }
 
-// Set p to the point correspoding to q on the associated Jacobi quartic.
-// Returns p.
-func (p *ProjectiveJacobiPoint) SetExtended(q *ExtendedPoint) *ProjectiveJacobiPoint {
-	var Z2, Y2, ZmY, tmp FieldElement
+// Find a point on the Jacobi quartic associated to each of the four
+// points Ristretto equivalent to p.
+//
+// There is one exception: for (0,-1) there is no point on the quartic and
+// so we repeat one on the quartic equivalent to (0,1).
+func (p *ExtendedPoint) ToJacobiQuarticRistretto(qs *[4]JacobiPoint) *ExtendedPoint {
+	var p2 ExtendedPoint
+	p2.X.Set(&p.Y)
+	p2.Y.Set(&p.X)
+	p2.Z.Mul(&p.Z, &feI)
+	p2.T.Neg(&p.T)
 
-	// TODO - use q.T
-	//      - double-check X=0 cases
+	p.toJacobiQuarticRistretto2(&qs[0], &qs[1])
+	p2.toJacobiQuarticRistretto2(&qs[1], &qs[2])
+	return p
+}
 
-	// Z = X sqrt(Z^2 - Y^2)
-	Z2.Square(&q.Z)
-	Y2.Square(&q.Y)
-	tmp.sub(&Z2, &Y2)
-	tmp.Sqrt(&tmp)
-	p.Z.Mul(&q.X, &tmp)
+// Like ToJacobiQuarticRistretto, but only computes for (x,y) and (-x,-y).
+func (p *ExtendedPoint) toJacobiQuarticRistretto2(q1, q2 *JacobiPoint) *ExtendedPoint {
+	// TODO case X=0
+	var Z2, Y2, X2, X2Z2mY2, den, ZpY, ZmY, sOverX, tmp, spOverXp FieldElement
 
-	// S = (Z-Y)X
-	ZmY.sub(&q.Z, &q.Y)
-	p.S.Mul(&ZmY, &q.X)
+	X2.Square(&p.X)
+	Y2.Square(&p.Y)
+	Z2.Square(&p.Z)
 
-	// T = 2 Z q.Z (Z-Y) 1/sqrt(-d-1)
+	// den := 1/sqrt(X^2 (Z^2 - Y^2))    (TODO: T)
+	X2Z2mY2.sub(&Z2, &Y2)
+	X2Z2mY2.Mul(&X2, &X2Z2mY2)
+	den.InvSqrt(&X2Z2mY2)
+
+	// sOverX := den * (Z-Y)
+	ZmY.sub(&p.Z, &p.Y)
+	sOverX.Mul(&den, &ZmY)
+
+	// spOverXp := den * (Z+Y)
+	ZpY.add(&p.Z, &p.Y)
+	spOverXp.Mul(&den, &ZpY)
+
+	// s := sOverX * X
+	// sp := -spOverXp * X
+	q1.S.Mul(&sOverX, &p.X)
+	tmp.Mul(&spOverXp, &p.X)
+	q2.S.Neg(&tmp)
+
+	// t := 2/sqrt(-d-1) * Z *  sOverX
+	// tp := 2/sqrt(-d-1) * Z * spOverXp
 	tmp.double(&feInvSqrtMinusDMinusOne)
-	tmp.Mul(&tmp, &q.Z)
 	tmp.Mul(&tmp, &p.Z)
-	p.T.Mul(&tmp, &ZmY)
+	q1.T.Mul(&tmp, &sOverX)
+	q2.T.Mul(&tmp, &spOverXp)
 
 	return p
 }
 
-func (p *ProjectiveJacobiPoint) Dual(q *ProjectiveJacobiPoint) *ProjectiveJacobiPoint {
+func (p *JacobiPoint) Dual(q *JacobiPoint) *JacobiPoint {
 	p.S.Neg(&q.S)
 	p.T.Neg(&q.T)
-	p.Z.Set(&q.Z)
+
 	return p
 }
 
@@ -124,33 +117,26 @@ func (p *ProjectiveJacobiPoint) Dual(q *ProjectiveJacobiPoint) *ProjectiveJacobi
 // This function computes a field element that is mapped to a given (s,t)
 // with Elligator2 if it exists.
 //
-// sPos should be 1 if s is positive and 0 if it is not.
-// (A ProjectiveJacobiPoint doesn't store s directly, but rather Z and S
-// with S = s Z and so it is expensive to check whether s is positive.)
-//
 // Returns 1 if a preimage is found and 0 if none exists.
-func (p *ProjectiveJacobiPoint) elligator2Inverse(fe *FieldElement, sPos int32) int {
-	var x, y, a, a2, S2, S4, Z2, invSqY, negS2 FieldElement
+func (p *JacobiPoint) elligator2Inverse(fe *FieldElement) int {
+	var x, y, a, a2, S2, S4, invSqY, negS2 FieldElement
 
-	ret := p.Z.IsNonZeroI()
-	done := int32(0)
-
-	Z2.Square(&p.Z)
-
-	// Special case: S = 0.  If S is zero, either t = 1 or t = -1.
+	// TODO unittests
+	// Special case: s = 0.  If s is zero, either t = 1 or t = -1.
 	// If t=1, then sqrt(i*d) is the preimage.  There is no preimage if t=-1.
 	sNonZero := p.S.IsNonZeroI()
-	tEqualsZ2 := p.T.EqualsI(&Z2) // T = Z^2 if and only if t = 1
-	ret &= 1 - ((1 - sNonZero) & (1 - tEqualsZ2))
+	tEqualsOne := p.T.EqualsI(&feOne)
 	fe.ConditionalSet(&feSqrtID, 1-sNonZero)
-	done = 1 - sNonZero
 
-	// a := (T + Z^2) (d+1)/(d-1) = (t+1) (d+1)/(d-1)
-	a.add(&p.T, &Z2)
+	ret := 1 - ((1 - sNonZero) & (1 - tEqualsOne))
+	done := 1 - sNonZero
+
+	// a := (t+1) (d+1)/(d-1)
+	a.add(&p.T, &feOne)
 	a.Mul(&a, &feDp1OverDm1)
 	a2.Square(&a)
 
-	// y := 1/sqrt(i (S^4 - a^2)).
+	// y := 1/sqrt(i (s^4 - a^2)).
 	S2.Square(&p.S)
 	S4.Square(&S2)
 	invSqY.sub(&S4, &a2)
@@ -160,9 +146,9 @@ func (p *ProjectiveJacobiPoint) elligator2Inverse(fe *FieldElement, sPos int32) 
 	ret &= sq // there is no preimage if the square root does not exist
 	done |= 1 - sq
 
-	// x := (a + sign(s)*S^2) y
+	// x := (a + sign(s)*s^2) y
 	negS2.Neg(&S2)
-	S2.ConditionalSet(&negS2, 1-sPos)
+	S2.ConditionalSet(&negS2, p.S.IsNegativeI())
 	x.add(&a, &S2)
 	x.Mul(&x, &y)
 
@@ -174,16 +160,16 @@ func (p *ProjectiveJacobiPoint) elligator2Inverse(fe *FieldElement, sPos int32) 
 
 // Set p to the point corresponding to the given point (s,t) on the
 // associated Jacobi quartic.
-func (p *CompletedPoint) SetJacobiQuartic(s, t *FieldElement) *CompletedPoint {
+func (p *CompletedPoint) SetJacobiQuartic(jc *JacobiPoint) *CompletedPoint {
 	var s2 FieldElement
-	s2.Square(s)
+	s2.Square(&jc.S)
 
-	// Set x to 2 * s * 1/sqrt(-d-1)
-	p.X.double(s)
+	// Set x to s * 2/sqrt(-d-1)
+	p.X.double(&jc.S)
 	p.X.Mul(&p.X, &feInvSqrtMinusDMinusOne)
 
 	// Set z to t
-	p.Z.Set(t)
+	p.Z.Set(&jc.T)
 
 	// Set y to 1-s^2
 	p.Y.sub(&feOne, &s2)
@@ -197,7 +183,8 @@ func (p *CompletedPoint) SetJacobiQuartic(s, t *FieldElement) *CompletedPoint {
 // on Elligator2 for Ristretto.  Returns p.
 func (p *CompletedPoint) SetRistrettoElligator2(r0 *FieldElement) *CompletedPoint {
 	var r, rPlusD, rPlusOne, D, N, ND, sqrt, twiddle, sgn FieldElement
-	var s, t, rSubOne, r0i, sNeg FieldElement
+	var rSubOne, r0i, sNeg FieldElement
+	var jc JacobiPoint
 
 	var b int32
 
@@ -230,24 +217,24 @@ func (p *CompletedPoint) SetRistrettoElligator2(r0 *FieldElement) *CompletedPoin
 	sqrt.Mul(&sqrt, &twiddle)
 
 	// s = N * sqrt * twiddle
-	s.Mul(&sqrt, &N)
+	jc.S.Mul(&sqrt, &N)
 
 	// t = -sgn * sqrt * s * (r-1) * (d-1)^2 - 1
-	t.Neg(&sgn)
-	t.Mul(&sqrt, &t)
-	t.Mul(&s, &t)
-	t.Mul(&feDMinusOneSquared, &t)
+	jc.T.Neg(&sgn)
+	jc.T.Mul(&sqrt, &jc.T)
+	jc.T.Mul(&jc.S, &jc.T)
+	jc.T.Mul(&feDMinusOneSquared, &jc.T)
 	rSubOne.sub(&r, &feOne)
-	t.Mul(&rSubOne, &t)
-	t.sub(&t, &feOne)
+	jc.T.Mul(&rSubOne, &jc.T)
+	jc.T.sub(&jc.T, &feOne)
 
-	sNeg.Neg(&s)
-	s.ConditionalSet(&sNeg, equal30(s.IsNegativeI(), b))
-	return p.SetJacobiQuartic(&s, &t)
+	sNeg.Neg(&jc.S)
+	jc.S.ConditionalSet(&sNeg, equal30(jc.S.IsNegativeI(), b))
+	return p.SetJacobiQuartic(&jc)
 }
 
 // WARNING This operation is not constant-time.  Do not use for cryptography
 //         unless you're sure this is not an issue.
-func (p *ProjectiveJacobiPoint) String() string {
-	return fmt.Sprintf("ProjectiveJacobiPoint(%v, %v, %v)", p.S, p.T, p.Z)
+func (p *JacobiPoint) String() string {
+	return fmt.Sprintf("JacobiPoint(%v, %v)", p.S, p.T)
 }

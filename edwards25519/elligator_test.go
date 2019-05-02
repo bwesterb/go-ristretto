@@ -49,14 +49,15 @@ func TestElligatorAndRistretto(t *testing.T) {
 	}
 }
 
-func TestProjectiveJacobiQuarticConversions(t *testing.T) {
+func TestToJacobiQuarticRistretto(t *testing.T) {
 	var buf [32]byte
-	var feZero, feOne, fe, js, jt, zInv edwards25519.FieldElement
+	var feZero, feOne, fe edwards25519.FieldElement
 	var cp, cp2 edwards25519.CompletedPoint
 	var ep, ep2 edwards25519.ExtendedPoint
-	var jp edwards25519.ProjectiveJacobiPoint
+	var jcs [4]edwards25519.JacobiPoint
 	feOne.SetOne()
 	feZero.SetZero()
+
 	for i := 0; i < 1000; i++ {
 		if i == 0 {
 			ep = edwards25519.ExtendedPoint{feZero, feOne, feOne, feZero}
@@ -68,18 +69,16 @@ func TestProjectiveJacobiQuarticConversions(t *testing.T) {
 			cp.SetRistrettoElligator2(&fe)
 			ep.SetCompleted(&cp)
 		}
-		jp.SetExtended(&ep)
+		ep.ToJacobiQuarticRistretto(&jcs)
 
-		zInv.Inverse(&jp.Z)
-		js.Mul(&jp.S, &zInv)
-		jt.Mul(&jp.T, &zInv)
-		jt.Mul(&jt, &zInv)
-		cp2.SetJacobiQuartic(&js, &jt)
-		ep2.SetCompleted(&cp2)
+		for j := 0; j < 4; j++ {
+			cp2.SetJacobiQuartic(&jcs[j])
+			ep2.SetCompleted(&cp2)
 
-		if ep2.RistrettoEqualsI(&ep) != 1 {
-			t.Logf("%v", &jp)
-			t.Fatalf("Jacobi(Jacobi^-1(%v)) == %v", &ep, &ep2)
+			if ep2.RistrettoEqualsI(&ep) != 1 {
+				t.Fatalf("Jacobi(ToJacobiQuarticRistretto(%v)[%d]) == %v",
+					&ep, j, &ep2)
+			}
 		}
 	}
 }

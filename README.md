@@ -73,6 +73,10 @@ by Bernstein, Duif, Lange, Schwabe and Yang.
 The new generic radix 51 field operations are also based on `amd64-51-30k`.
 The variable-time scalar multiplication code is based on that
 of [curve25519-dalek](https://github.com/dalek-cryptography/curve25519-dalek).
+The Lizard encoding was proposed by [Bram Westerbaan](https://bram.westerbaan.name/).
+The quick RistrettoElligator inversion for it is joint work
+with [Bram Westerbaan](https://bram.westerbaan.name/)
+and [Mike Hamburg](https://www.shiftleft.org).
 
 ### other platforms
 * [Rust](https://github.com/dalek-cryptography/curve25519-dalek)
