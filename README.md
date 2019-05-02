@@ -82,3 +82,18 @@ and [Mike Hamburg](https://www.shiftleft.org).
 * [Rust](https://github.com/dalek-cryptography/curve25519-dalek)
 * [Javascript](https://github.com/jedisct1/wasm-crypto)
 * [C (part of `libsodium`)](https://libsodium.gitbook.io/doc/advanced/point-arithmetic/ristretto)
+
+
+Changes
+-------
+
+### 1.1.0 (unreleased)
+
+- Add support for the Lizard 16-bytes-to-point-injection.
+  See  `ristretto.Point.`{`SetLizard()`, `Lizard()`,`LizardInto()`}.
+- Add `Scalar.DeriveShort()` to derive a half-length scalar.
+  (Warning: half-length scalars are unsafe in almost every application.)
+
+- (internal) Add `ExtendedPoint.RistrettoElligator2Inverse()` to compute
+  all preimages of a given point up-to Ristretto equivalence
+  of `CompletedPoint.SetRistrettoElligator2()`.
