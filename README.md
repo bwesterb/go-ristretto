@@ -5,24 +5,25 @@ Many cryptographic schemes need a group of prime order.  Popular and
 efficient elliptic curves like (Edwards25519 of `ed25519` fame) are
 rarely of prime order.  There is, however, a convenient method
 to construct a prime order group from such curves,
-called [Ristretto](https://ristretto.group) proposed by Mike Hamburg.
+called [Ristretto](https://ristretto.group) proposed by
+[Mike Hamburg](https://www.shiftleft.org).
 
 This is a pure Go implementation of the group operations on the
 Ristretto prime-order group built from Edwards25519.
 Documentation is on [godoc](https://godoc.org/github.com/bwesterb/go-ristretto).
 
-Example: El-Gamal encryption
+Example: El'Gamal encryption
 ----------------------------
 
 ```go
-// Generate an El-Gamal keypair
+// Generate an El'Gamal keypair
 var secretKey ristretto.Scalar
 var publicKey ristretto.Point
 
 secretKey.Rand() // generate a new secret key
 publicKey.ScalarMultBase(&secretKey) // compute public key
 
-// El-Gamal encrypt a random curve point p into a ciphertext-pair (c1,c2)
+// El'Gamal encrypt a random curve point p into a ciphertext-pair (c1,c2)
 var p ristretto.Point
 var r ristretto.Scalar
 var c1 ristretto.Point
@@ -67,13 +68,32 @@ from [Adam Langley](https://www.imperialviolet.org)'s
 The amd64 optimized field arithmetic are from George Tankersley's
 [ed25519 patch](https://go-review.googlesource.com/c/crypto/+/71950),
 which in turn is based on SUPERCOP's
-[amd64-51-30k](https://github.com/floodyberry/supercop/tree/master/crypto_sign/ed25519/amd64-51-30k)
+[`amd64-51-30k`](https://github.com/floodyberry/supercop/tree/master/crypto_sign/ed25519/amd64-51-30k)
 by Bernstein, Duif, Lange, Schwabe and Yang.
-The new generic radix 51 field operations are also  based on amd64-51-30k.
+The new generic radix 51 field operations are also based on `amd64-51-30k`.
 The variable-time scalar multiplication code is based on that
 of [curve25519-dalek](https://github.com/dalek-cryptography/curve25519-dalek).
+The Lizard encoding was proposed by [Bram Westerbaan](https://bram.westerbaan.name/).
+The quick RistrettoElligator inversion for it is joint work
+with [Bram Westerbaan](https://bram.westerbaan.name/)
+and [Mike Hamburg](https://www.shiftleft.org).
 
 ### other platforms
 * [Rust](https://github.com/dalek-cryptography/curve25519-dalek)
 * [Javascript](https://github.com/jedisct1/wasm-crypto)
 * [C (part of `libsodium`)](https://libsodium.gitbook.io/doc/advanced/point-arithmetic/ristretto)
+
+
+Changes
+-------
+
+### 1.1.0 (unreleased)
+
+- Add support for the Lizard 16-bytes-to-point-injection.
+  See  `ristretto.Point.`{`SetLizard()`, `Lizard()`,`LizardInto()`}.
+- Add `Scalar.DeriveShort()` to derive a half-length scalar.
+  (Warning: half-length scalars are unsafe in almost every application.)
+
+- (internal) Add `ExtendedPoint.RistrettoElligator2Inverse()` to compute
+  all preimages of a given point up-to Ristretto equivalence
+  of `CompletedPoint.SetRistrettoElligator2()`.

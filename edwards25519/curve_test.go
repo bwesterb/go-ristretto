@@ -9,46 +9,6 @@ import (
 	"github.com/bwesterb/go-ristretto/edwards25519"
 )
 
-func TestElligatorAndRistretto(t *testing.T) {
-	var buf, goBuf, cBuf, goBuf2, cBuf2 [32]byte
-	var fe edwards25519.FieldElement
-	var cp edwards25519.CompletedPoint
-	var ep edwards25519.ExtendedPoint
-	var ep2 edwards25519.ExtendedPoint
-
-	var cP cref.GroupGe
-	var cP2 cref.GroupGe
-	var cFe cref.Fe25519
-
-	for i := 0; i < 1000; i++ {
-		rnd.Read(buf[:])
-
-		cFe.Unpack(&buf)
-		cP.Elligator(&cFe)
-		cP.Pack(&cBuf)
-
-		fe.SetBytes(&buf)
-		cp.SetRistrettoElligator2(&fe)
-		ep.SetCompleted(&cp)
-		ep.RistrettoInto(&goBuf)
-
-		if !bytes.Equal(cBuf[:], goBuf[:]) {
-			t.Fatalf("pack o elligator ( %v ) = %v != %v", buf, cBuf, goBuf)
-		}
-
-		ep2.SetRistretto(&goBuf)
-		ep2.RistrettoInto(&goBuf2)
-
-		cP2.Unpack(&cBuf)
-		cP2.Pack(&cBuf2)
-
-		if !bytes.Equal(cBuf[:], goBuf[:]) {
-			t.Fatalf("pack o unpack o pack o elligator ( %v ) = %v != %v",
-				buf, cBuf2, goBuf2)
-		}
-	}
-}
-
 func TestPointDouble(t *testing.T) {
 	var buf, cBuf, goBuf [32]byte
 	var fe edwards25519.FieldElement
@@ -210,20 +170,6 @@ func TestRistrettoEqualsI(t *testing.T) {
 	}
 }
 
-func BenchmarkElligator(b *testing.B) {
-	var fe edwards25519.FieldElement
-	var cp edwards25519.CompletedPoint
-	var ep edwards25519.ExtendedPoint
-	var buf [32]byte
-	rnd.Read(buf[:])
-	fe.SetBytes(&buf)
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		cp.SetRistrettoElligator2(&fe)
-		ep.SetCompleted(&cp)
-	}
-}
-
 func BenchmarkRistrettoPack(b *testing.B) {
 	var fe edwards25519.FieldElement
 	var cp edwards25519.CompletedPoint
@@ -273,67 +219,5 @@ func BenchmarkScalarMult(b *testing.B) {
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		ep.ScalarMult(&ep, &sBuf)
-	}
-}
-
-func BenchmarkScalarMultTableCompute(b *testing.B) {
-	var buf [32]byte
-	var fe edwards25519.FieldElement
-	var cp edwards25519.CompletedPoint
-	var ep edwards25519.ExtendedPoint
-	var table edwards25519.ScalarMultTable
-	rnd.Read(buf[:])
-	fe.SetBytes(&buf)
-	cp.SetRistrettoElligator2(&fe)
-	ep.SetCompleted(&cp)
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		table.Compute(&ep)
-	}
-}
-
-func BenchmarkScalarMultTableScalarMult(b *testing.B) {
-	var buf, sBuf [32]byte
-	var biS big.Int
-	var cp edwards25519.CompletedPoint
-	var ep edwards25519.ExtendedPoint
-	var fe edwards25519.FieldElement
-	var table edwards25519.ScalarMultTable
-	biS.Rand(rnd, &biL)
-	srBuf := biS.Bytes()
-	for j := 0; j < len(srBuf); j++ {
-		sBuf[j] = srBuf[len(srBuf)-j-1]
-	}
-	rnd.Read(buf[:])
-	fe.SetBytes(&buf)
-	cp.SetRistrettoElligator2(&fe)
-	ep.SetCompleted(&cp)
-	table.Compute(&ep)
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		table.ScalarMult(&ep, &sBuf)
-	}
-}
-
-func BenchmarkScalarMultTableVarTimeScalarMult(b *testing.B) {
-	var buf, sBuf [32]byte
-	var biS big.Int
-	var cp edwards25519.CompletedPoint
-	var ep edwards25519.ExtendedPoint
-	var fe edwards25519.FieldElement
-	var table edwards25519.ScalarMultTable
-	biS.Rand(rnd, &biL)
-	srBuf := biS.Bytes()
-	for j := 0; j < len(srBuf); j++ {
-		sBuf[j] = srBuf[len(srBuf)-j-1]
-	}
-	rnd.Read(buf[:])
-	fe.SetBytes(&buf)
-	cp.SetRistrettoElligator2(&fe)
-	ep.SetCompleted(&cp)
-	table.Compute(&ep)
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		table.VarTimeScalarMult(&ep, &sBuf)
 	}
 }

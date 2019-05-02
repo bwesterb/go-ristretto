@@ -1,6 +1,7 @@
 package ristretto_test
 
 import (
+	"bytes"
 	"encoding/hex"
 	"testing"
 
@@ -116,5 +117,62 @@ func TestBasePointMultiples(t *testing.T) {
 		if !p1.Equals(&p2) {
 			t.Fatalf("[%v]B = %v != %v", s, p2, p1)
 		}
+	}
+}
+
+func testLizardVector(t *testing.T, in, out string) {
+	var p ristretto.Point
+	var inBuf [16]byte
+	var outBuf [32]byte
+	hex.Decode(inBuf[:], []byte(in))
+	hex.Decode(outBuf[:], []byte(out))
+	p.SetLizard(&inBuf)
+	if !bytes.Equal(p.Bytes(), outBuf[:]) {
+		t.Fatalf("Lizard(%s) is wrong", in)
+	}
+}
+
+func TestLizardVectors(t *testing.T) {
+	testLizardVector(t, "00000000000000000000000000000000",
+		"f0b7e34484f74cf00f15024b738539738646bbbe1e9bc7509a676815227e774f")
+	testLizardVector(t, "01010101010101010101010101010101",
+		"cc92e81f585afc5caac88660d8d17e9025a44489a363042123f6af0702156e65")
+}
+
+func TestLizardInjective(t *testing.T) {
+	var buf1, buf2 [16]byte
+	var buf [32]byte
+	var p ristretto.Point
+	for i := 0; i < 1000; i++ {
+		rnd.Read(buf1[:])
+		p.SetLizard(&buf1)
+		p.BytesInto(&buf)
+		p.SetBytes(&buf)
+		err := p.LizardInto(&buf2)
+		if err != nil {
+			t.Fatalf("LizardInto: %v", err)
+		}
+		if !bytes.Equal(buf1[:], buf2[:]) {
+			t.Fatalf("Lizard^-1 o Lizard != id: %v != %v", buf1, buf2)
+		}
+	}
+}
+
+func BenchmarkLizardDecode(b *testing.B) {
+	buf := [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+	var p ristretto.Point
+	p.SetLizard(&buf)
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		p.Lizard()
+	}
+}
+
+func BenchmarkLizardEncode(b *testing.B) {
+	var buf [16]byte
+	var p ristretto.Point
+	for n := 0; n < b.N; n++ {
+		rnd.Read(buf[:])
+		p.SetLizard(&buf)
 	}
 }

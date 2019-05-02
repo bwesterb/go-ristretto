@@ -8,14 +8,14 @@ import (
 )
 
 func Example() {
-	// Generate an El-Gamal keypair
+	// Generate an El'Gamal keypair
 	var secretKey ristretto.Scalar
 	var publicKey ristretto.Point
 
 	secretKey.Rand()                     // generate a new secret key
 	publicKey.ScalarMultBase(&secretKey) // compute public key
 
-	// El-Gamal encrypt a random curve point p into a ciphertext-pair (c1,c2)
+	// El'Gamal encrypt a random curve point p into a ciphertext-pair (c1,c2)
 	var p ristretto.Point
 	var r ristretto.Scalar
 	var c1 ristretto.Point

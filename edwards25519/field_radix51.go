@@ -1,4 +1,4 @@
-// +build amd64 go1.12
+// +build amd64,!forcegeneric go1.12,!forcegeneric
 
 package edwards25519
 
@@ -42,6 +42,12 @@ var (
 		473840635492096, 133279003116800,
 	}
 
+	// 2 / sqrt(-1-d)
+	feDoubleInvSqrtMinusDMinusOne = FieldElement{
+		1693982333959686, 608509411481997, 2235573344831311,
+		947681270984193, 266558006233600,
+	}
+
 	// (d-1)^2
 	feDMinusOneSquared = FieldElement{
 		1507062230895904, 1572317787530805, 683053064812840,
@@ -52,6 +58,18 @@ var (
 	feOneMinusDSquared = FieldElement{
 		1136626929484150, 1998550399581263, 496427632559748,
 		118527312129759, 45110755273534,
+	}
+
+	// (d+1)/(d-1)
+	feDp1OverDm1 = FieldElement{
+		2159851467815724, 1752228607624431, 1825604053920671,
+		1212587319275468, 253422448836237,
+	}
+
+	// sqrt(i*d)
+	feSqrtID = FieldElement{
+		2298852427963285, 3837146560810661, 4413131899466403,
+		3883177008057528, 2352084440532925,
 	}
 
 	epZero = ExtendedPoint{feZero, feOne, feOne, feZero}

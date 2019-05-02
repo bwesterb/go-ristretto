@@ -2,6 +2,11 @@
 // Ristretto group is a subquotient.
 package edwards25519
 
+import (
+	"encoding/hex"
+	"fmt"
+)
+
 // (X:Y:Z:T) satisfying x=X/Z, y=Y/Z, X*Y=Z*T.  Aka P3.
 type ExtendedPoint struct {
 	X, Y, Z, T FieldElement
@@ -82,80 +87,6 @@ func (p *ExtendedPoint) ConditionalSet(q *ExtendedPoint, b int32) *ExtendedPoint
 	p.Z.ConditionalSet(&q.Z, b)
 	p.T.ConditionalSet(&q.T, b)
 	return p
-}
-
-// Set p to the point corresponding to the given point (s,t) on the
-// associated Jacobi quartic.
-func (p *CompletedPoint) SetJacobiQuartic(s, t *FieldElement) *CompletedPoint {
-	var s2 FieldElement
-	s2.Square(s)
-
-	// Set x to 2 * s * 1/sqrt(-d-1)
-	p.X.double(s)
-	p.X.Mul(&p.X, &feInvSqrtMinusDMinusOne)
-
-	// Set z to t
-	p.Z.Set(t)
-
-	// Set y to 1-s^2
-	p.Y.sub(&feOne, &s2)
-
-	// Set t to 1+s^2
-	p.T.add(&feOne, &s2)
-	return p
-}
-
-// Set p to the curvepoint corresponding to r0 via Mike Hamburg's variation
-// on Elligator2 for Ristretto.  Returns p.
-func (p *CompletedPoint) SetRistrettoElligator2(r0 *FieldElement) *CompletedPoint {
-	var r, rPlusD, rPlusOne, D, N, ND, sqrt, twiddle, sgn FieldElement
-	var s, t, rSubOne, r0i, sNeg FieldElement
-
-	var b int32
-
-	// r := i * r0^2
-	r0i.Mul(r0, &feI)
-	r.Mul(r0, &r0i)
-
-	// D := -((d*r)+1) * (r + d)
-	rPlusD.add(&feD, &r)
-	D.Mul(&feD, &r)
-	D.add(&D, &feOne)
-	D.Mul(&D, &rPlusD)
-	D.Neg(&D)
-
-	// N := -(d^2 - 1)(r + 1)
-	rPlusOne.add(&r, &feOne)
-	N.Mul(&feOneMinusDSquared, &rPlusOne)
-
-	// sqrt is the inverse square root of N*D or of i*N*D.
-	// b=1 iff n1 is square.
-	ND.Mul(&N, &D)
-
-	b = sqrt.InvSqrtI(&ND)
-	sqrt.Abs(&sqrt)
-
-	twiddle.SetOne()
-	twiddle.ConditionalSet(&r0i, 1-b)
-	sgn.SetOne()
-	sgn.ConditionalSet(&feMinusOne, 1-b)
-	sqrt.Mul(&sqrt, &twiddle)
-
-	// s = N * sqrt(N*D) * twiddle
-	s.Mul(&sqrt, &N)
-
-	// t = -sgn * sqrt * s * (r-1) * (d-1)^2 - 1
-	t.Neg(&sgn)
-	t.Mul(&sqrt, &t)
-	t.Mul(&s, &t)
-	t.Mul(&feDMinusOneSquared, &t)
-	rSubOne.sub(&r, &feOne)
-	t.Mul(&rSubOne, &t)
-	t.sub(&t, &feOne)
-
-	sNeg.Neg(&s)
-	s.ConditionalSet(&sNeg, equal30(s.IsNegativeI(), b))
-	return p.SetJacobiQuartic(&s, &t)
 }
 
 // Sets p to q+r.  Returns p
@@ -485,4 +416,20 @@ func (p *ExtendedPoint) RistrettoEqualsI(q *ExtendedPoint) int32 {
 	x1x2.Mul(&p.X, &q.X)
 	y1y2.Mul(&p.Y, &q.Y)
 	return 1 - ((1 - x1y2.EqualsI(&x2y1)) & (1 - x1x2.EqualsI(&y1y2)))
+}
+
+// WARNING This operation is not constant-time.  Do not use for cryptography
+//         unless you're sure this is not an issue.
+func (p *ExtendedPoint) String() string {
+	return fmt.Sprintf("ExtendedPoint(%v, %v, %v, %v; %v)",
+		p.X, p.Y, p.Z, p.T, hex.EncodeToString(p.Ristretto()))
+}
+
+// WARNING This operation is not constant-time.  Do not use for cryptography
+//         unless you're sure this is not an issue.
+func (p *CompletedPoint) String() string {
+	var ep ExtendedPoint
+	ep.SetCompleted(p)
+	return fmt.Sprintf("CompletedPoint(%v, %v, %v, %v; %v)",
+		p.X, p.Y, p.Z, p.T, hex.EncodeToString(ep.Ristretto()))
 }

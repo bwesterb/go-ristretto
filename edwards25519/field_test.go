@@ -135,6 +135,25 @@ func TestFeInvSqrtI(t *testing.T) {
 	}
 }
 
+func TestFeSqrt(t *testing.T) {
+	var bi big.Int
+	var fe1, fe2 edwards25519.FieldElement
+	for i := 0; i < 100; i++ {
+		bi.Rand(rnd, &bi25519)
+		bi.Mul(&bi, &bi)
+		bi.Mod(&bi, &bi25519)
+		fe1.SetBigInt(&bi)
+		fe2.Sqrt(&fe1)
+		if fe2.IsNegativeI() == 1 {
+			t.Fatalf("Sqrt(%v) is negative", &bi)
+		}
+		fe2.Square(&fe2)
+		if !fe1.Equals(&fe2) {
+			t.Fatalf("Sqrt(%v) incorrect", &bi)
+		}
+	}
+}
+
 func BenchmarkFeInverse(b *testing.B) {
 	var fe edwards25519.FieldElement
 	var bi big.Int
