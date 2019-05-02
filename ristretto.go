@@ -211,7 +211,7 @@ func (p *Point) SetLizard(data *[16]byte) *Point {
 
 // Decodes 16 bytes encoded into this point using SetLizard().
 //
-// Returns nil if no point was encoded.
+// Returns nil if this point does not contain data encoded using Lizard.
 func (p *Point) Lizard() []byte {
 	var ret [16]byte
 	if p.LizardInto(&ret) != nil {
