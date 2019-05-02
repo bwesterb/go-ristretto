@@ -118,7 +118,7 @@ func (p *JacobiPoint) Dual(q *JacobiPoint) *JacobiPoint {
 //
 // Returns 1 if a preimage is found and 0 if none exists.
 func (p *JacobiPoint) elligator2Inverse(fe *FieldElement) int {
-	var x, y, a, a2, S2, S4, invSqY, negS2 FieldElement
+	var x, y, a, a2, S2, S4, invSqiY, negS2 FieldElement
 
 	// TODO unittests
 	// Special case: s = 0.  If s is zero, either t = 1 or t = -1.
@@ -138,12 +138,12 @@ func (p *JacobiPoint) elligator2Inverse(fe *FieldElement) int {
 	// y := 1/sqrt(i (s^4 - a^2)).
 	S2.Square(&p.S)
 	S4.Square(&S2)
-	invSqY.sub(&S4, &a2)
-	invSqY.Mul(&invSqY, &feI)
+	invSqiY.sub(&S4, &a2)
 
-	sq := y.InvSqrtI(&invSqY)
-	ret &= sq // there is no preimage if the square root does not exist
-	done |= 1 - sq
+	// there is no preimage of the square root of i*(s^4-a^2) does not exist
+	sq := y.InvSqrtI(&invSqiY)
+	ret &= 1 - sq
+	done |= sq
 
 	// x := (a + sign(s)*s^2) y
 	negS2.Neg(&S2)
