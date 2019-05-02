@@ -192,10 +192,18 @@ func (p *Point) Derive(buf []byte) *Point {
 
 // Encode 16 bytes into a point using the Lizard method.
 //
-// Use Lizard() or LizardInto() to decode the bytes from a point.
+// Use Lizard() or LizardInto() to decode the bytes from a Point.
 //
-// There is a 1 in 2^125 chance that an encoded point cannot be properly
-// decoded.
+// Notes on usage:
+//
+//  - If you want to create a Point from random data, you should rather
+//    create a random Point with Point.Rand() and then use (a hash of)
+//    Point.Bytes() as the random data.
+//  - If you want to derive a Point from data, but you do not care about
+//    decoding the data back from the point, you should use
+//    the Point.Derive() method instead.
+//  - There are probably around 8 inputs to SetLizard() which cannot
+//    be decoded.  The chance that you hit such an input is around 1 in 2^125.
 func (p *Point) SetLizard(data *[16]byte) *Point {
 	var fe edwards25519.FieldElement
 	var cp edwards25519.CompletedPoint
@@ -212,6 +220,8 @@ func (p *Point) SetLizard(data *[16]byte) *Point {
 // Decodes 16 bytes encoded into this point using SetLizard().
 //
 // Returns nil if this point does not contain data encoded using Lizard.
+//
+// See SetLizard() for notes on usage.
 func (p *Point) Lizard() []byte {
 	var ret [16]byte
 	if p.LizardInto(&ret) != nil {
@@ -222,6 +232,8 @@ func (p *Point) Lizard() []byte {
 
 // Decodes 16 bytes into the given buffer  encoded into this point
 // using SetLizard().
+//
+// See SetLizard() for notes on usage.
 func (p *Point) LizardInto(buf *[16]byte) error {
 	var fes [8]edwards25519.FieldElement
 	var buf2 [32]byte
