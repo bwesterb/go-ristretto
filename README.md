@@ -5,7 +5,8 @@ Many cryptographic schemes need a group of prime order.  Popular and
 efficient elliptic curves like (Edwards25519 of `ed25519` fame) are
 rarely of prime order.  There is, however, a convenient method
 to construct a prime order group from such curves,
-called [Ristretto](https://ristretto.group) proposed by Mike Hamburg.
+called [Ristretto](https://ristretto.group) proposed by
+[Mike Hamburg](https://www.shiftleft.org).
 
 This is a pure Go implementation of the group operations on the
 Ristretto prime-order group built from Edwards25519.
@@ -67,9 +68,9 @@ from [Adam Langley](https://www.imperialviolet.org)'s
 The amd64 optimized field arithmetic are from George Tankersley's
 [ed25519 patch](https://go-review.googlesource.com/c/crypto/+/71950),
 which in turn is based on SUPERCOP's
-[amd64-51-30k](https://github.com/floodyberry/supercop/tree/master/crypto_sign/ed25519/amd64-51-30k)
+[`amd64-51-30k`](https://github.com/floodyberry/supercop/tree/master/crypto_sign/ed25519/amd64-51-30k)
 by Bernstein, Duif, Lange, Schwabe and Yang.
-The new generic radix 51 field operations are also  based on amd64-51-30k.
+The new generic radix 51 field operations are also based on `amd64-51-30k`.
 The variable-time scalar multiplication code is based on that
 of [curve25519-dalek](https://github.com/dalek-cryptography/curve25519-dalek).
 
