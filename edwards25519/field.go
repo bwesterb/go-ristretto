@@ -4,6 +4,8 @@ import (
 	// Requires for FieldElement.[Set]BigInt().  Obviously not used for actual
 	// implementation, as operations on big.Ints are  not constant-time.
 	"math/big"
+
+	"encoding/binary"
 )
 
 // Set fe to i, the root of -1.  Returns fe.
@@ -124,14 +126,15 @@ func (fe *FieldElement) IsNegativeI() int32 {
 
 // Returns 1 if fe is non-zero, otherwise 0.
 func (fe *FieldElement) IsNonZeroI() int32 {
-	var ret uint8
 	var buf [32]byte
 	fe.BytesInto(&buf)
-	ret = (buf[0] | buf[1] | buf[2] | buf[3] | buf[4] | buf[5] | buf[6] |
-		buf[7] | buf[8] | buf[9] | buf[10] | buf[11] | buf[12] | buf[13] |
-		buf[14] | buf[15] | buf[16] | buf[17] | buf[18] | buf[19] | buf[20] |
-		buf[21] | buf[22] | buf[23] | buf[24] | buf[25] | buf[26] | buf[27] |
-		buf[28] | buf[29] | buf[30] | buf[31])
+	ret := (binary.LittleEndian.Uint64(buf[0:8]) |
+		binary.LittleEndian.Uint64(buf[8:16]) |
+		binary.LittleEndian.Uint64(buf[16:24]) |
+		binary.LittleEndian.Uint64(buf[24:32]))
+	ret |= ret >> 32
+	ret |= ret >> 16
+	ret |= ret >> 8
 	ret |= ret >> 4
 	ret |= ret >> 2
 	ret |= ret >> 1
