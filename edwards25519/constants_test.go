@@ -27,4 +27,18 @@ func TestFeConstants(t *testing.T) {
 		t.Fatalf("doubleInvSqrtMinusDMinusOne: %v != %v",
 			feDoubleInvSqrtMinusDMinusOne, doubleInvSqrtMinusDMinusOne)
 	}
+
+	var doubleIInvSqrtMinusDMinusOne FieldElement
+	doubleIInvSqrtMinusDMinusOne.Mul(&feDoubleInvSqrtMinusDMinusOne, &feI)
+	if doubleIInvSqrtMinusDMinusOne.EqualsI(&feDoubleIInvSqrtMinusDMinusOne) != 1 {
+		t.Fatalf("doubleIInvSqrtMinusDMinusOne: %v != %v",
+			feDoubleIInvSqrtMinusDMinusOne, doubleIInvSqrtMinusDMinusOne)
+	}
+
+	var invSqrt1pD FieldElement
+	invSqrt1pD.add(&feD, &feOne)
+	invSqrt1pD.InvSqrt(&invSqrt1pD)
+	if invSqrt1pD.EqualsI(&feInvSqrt1pD) != 1 {
+		t.Fatalf("invSqrt1pD: %v != %v", feInvSqrt1pD, invSqrt1pD)
+	}
 }

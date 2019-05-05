@@ -55,54 +55,81 @@ func (p *ExtendedPoint) RistrettoElligator2Inverse(fes *[8]FieldElement) uint8 {
 // There is one exception: for (0,-1) there is no point on the quartic and
 // so we repeat one on the quartic equivalent to (0,1).
 func (p *ExtendedPoint) ToJacobiQuarticRistretto(qs *[4]JacobiPoint) *ExtendedPoint {
-	var p2 ExtendedPoint
-	p2.X.Set(&p.Y)
-	p2.Y.Set(&p.X)
-	p2.Z.Mul(&p.Z, &feI)
-	p2.T.Neg(&p.T)
+	var X2, Y2, Z2, Y4, ZmY, ZpY, Z2mY2, gamma, den, sOverX, spOverXp, tmp FieldElement
 
-	p.toJacobiQuarticRistretto2(&qs[0], &qs[1])
-	p2.toJacobiQuarticRistretto2(&qs[2], &qs[3])
-	return p
-}
+	X2.Square(&p.X)     // X^2
+	Y2.Square(&p.Y)     // Y^2
+	Y4.Square(&Y2)      // Y^4
+	Z2.Square(&p.Z)     // Z^2
+	ZmY.sub(&p.Z, &p.Y) // Z - Y
+	ZpY.add(&p.Z, &p.Y) // Z + Y
+	Z2mY2.sub(&Z2, &Y2) // Z^2 - Y^2
 
-// Like ToJacobiQuarticRistretto, but only computes for (x,y) and (-x,-y).
-func (p *ExtendedPoint) toJacobiQuarticRistretto2(q1, q2 *JacobiPoint) *ExtendedPoint {
-	var X2, X2Z2mY2, den, ZpY, ZmY, sOverX, tmp, spOverXp FieldElement
+	// gamma := 1/sqrt( Y^4 X^2 (Z^2 - Y^2) )
+	gamma.Mul(&Y4, &X2)
+	gamma.Mul(&gamma, &Z2mY2)
+	gamma.InvSqrt(&gamma)
 
-	X2.Square(&p.X)
+	// den := gamma * Y^2
+	den.Mul(&gamma, &Y2)
 
-	ZmY.sub(&p.Z, &p.Y)
-	ZpY.add(&p.Z, &p.Y)
-
-	// den := 1/sqrt(X^2 (Z^2 - Y^2))
-	X2Z2mY2.Mul(&ZmY, &ZpY)
-	X2Z2mY2.Mul(&X2Z2mY2, &X2)
-	den.InvSqrt(&X2Z2mY2)
-
-	// sOverX := den * (Z-Y)
+	// sOverX := den * (Z - Y)
+	// spOverXp := den * (Z + Y)
 	sOverX.Mul(&den, &ZmY)
-
-	// spOverXp := den * (Z+Y)
 	spOverXp.Mul(&den, &ZpY)
 
-	// s := sOverX * X
-	// sp := -spOverXp * X
-	q1.S.Mul(&sOverX, &p.X)
+	// s_0 := sOverX * X
+	// s_1 := -spOverXp * X
+	qs[0].S.Mul(&sOverX, &p.X)
 	tmp.Mul(&spOverXp, &p.X)
-	q2.S.Neg(&tmp)
+	qs[1].S.Neg(&tmp)
 
-	// t := 2/sqrt(-d-1) * Z *  sOverX
-	// tp := 2/sqrt(-d-1) * Z * spOverXp
+	// t_0 := 2/sqrt(-d-1) * Z * sOverX
+	// t_1 := 2/sqrt(-d-1) * Z * spOverXp
 	tmp.Mul(&feDoubleInvSqrtMinusDMinusOne, &p.Z)
-	q1.T.Mul(&tmp, &sOverX)
-	q2.T.Mul(&tmp, &spOverXp)
+	qs[0].T.Mul(&tmp, &sOverX)
+	qs[1].T.Mul(&tmp, &spOverXp)
 
-	// Special case: if X=0 then we are currently set to return q1=(0,0)
-	// and q2=(0,0), but we should return q1=(0,1) q2=(0,1).
-	xIsZero := 1 - X2.IsNonZeroI()
-	q1.T.ConditionalSet(&feOne, xIsZero)
-	q2.T.ConditionalSet(&feOne, xIsZero)
+	// den = 1/sqrt(1+d) (Y^2 - Z^2) gamma
+	den.Neg(&Z2mY2)
+	den.Mul(&den, &feInvSqrt1pD)
+	den.Mul(&den, &gamma)
+
+	// Same as before, but with the substitution (X, Y, Z) = (Y, X, i*Z)
+	var iZ, iZmX, iZpX, sOverY, spOverYp FieldElement
+	iZ.Mul(&feI, &p.Z)  // iZ
+	iZmX.sub(&iZ, &p.X) // iZ - X
+	iZpX.add(&iZ, &p.X) // iZ + X
+
+	// sOverY := den * (iZ - Y)
+	// spOverYp := den * (iZ + Y)
+	sOverY.Mul(&den, &iZmX)
+	spOverYp.Mul(&den, &iZpX)
+
+	// s_2 := sOverY * Y
+	// s_3 := -spOverYp * Y
+	qs[2].S.Mul(&sOverY, &p.Y)
+	tmp.Mul(&spOverYp, &p.Y)
+	qs[3].S.Neg(&tmp)
+
+	// t_2 := 2/sqrt(-d-1) * i*Z * sOverY
+	// t_3 := 2/sqrt(-d-1) * i*Z * spOverYp
+	tmp.Mul(&feDoubleInvSqrtMinusDMinusOne, &iZ)
+	qs[2].T.Mul(&tmp, &sOverY)
+	qs[3].T.Mul(&tmp, &spOverYp)
+
+	// Special case: X=0 or Y=0.  Then return
+	//
+	//  (0,1)   (1,2i/sqrt(-d-1)   (-1,2i/sqrt(-d-1))
+	//
+	// Note that if X=0 or Y=0, then s_i = t_i = 0.
+	XorYisZero := 1 - (p.X.IsNonZeroI() & p.Y.IsNonZeroI())
+	qs[0].T.ConditionalSet(&feOne, XorYisZero)
+	qs[1].T.ConditionalSet(&feOne, XorYisZero)
+	qs[2].T.ConditionalSet(&feDoubleIInvSqrtMinusDMinusOne, XorYisZero)
+	qs[3].T.ConditionalSet(&feDoubleIInvSqrtMinusDMinusOne, XorYisZero)
+	qs[2].S.ConditionalSet(&feOne, XorYisZero)
+	qs[3].S.ConditionalSet(&feMinusOne, XorYisZero)
 
 	return p
 }
