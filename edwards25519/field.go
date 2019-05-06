@@ -177,9 +177,9 @@ func (fe *FieldElement) BigInt() *big.Int {
 //
 // WARNING This operation is not constant-time.  Do not use for cryptography
 //         unless you're sure this is not an issue.
-// func (fe FieldElement) String() string {
-// 	return fe.BigInt().String()
-// }
+func (fe FieldElement) String() string {
+	return fe.BigInt().String()
+}
 
 // Sets fe to x modulo 2^255-19.
 //
