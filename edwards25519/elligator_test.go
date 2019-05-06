@@ -86,9 +86,16 @@ func TestToJacobiQuarticRistretto(t *testing.T) {
 func TestRistrettoElligator2Inverse(t *testing.T) {
 	var buf [32]byte
 	var fe edwards25519.FieldElement
+	var torsion [4]edwards25519.ExtendedPoint
 	var cp, cp2 edwards25519.CompletedPoint
 	var ep, ep2 edwards25519.ExtendedPoint
 	var fs [8]edwards25519.FieldElement
+
+	torsion[0].SetZero()
+	torsion[1].SetTorsion1()
+	torsion[2].SetTorsion2()
+	torsion[3].SetTorsion3()
+
 	for i := 0; i < 1000; i++ {
 		ok := true
 		if i == 0 {
@@ -106,6 +113,7 @@ func TestRistrettoElligator2Inverse(t *testing.T) {
 		}
 		cp.SetRistrettoElligator2(&fe)
 		ep.SetCompleted(&cp)
+		ep.Add(&ep, &torsion[i%4])
 		setMask := ep.RistrettoElligator2Inverse(&fs)
 		foundOriginal := false
 		count := 0
@@ -134,7 +142,8 @@ func TestRistrettoElligator2Inverse(t *testing.T) {
 			ok = false
 		}
 		if !ok {
-			t.Fatalf("^ see errors above.  fe=%v, ep=%v", hex.EncodeToString(buf[:]), &ep)
+			t.Fatalf("^ see errors above.  fe=%v, ep=%v torsion=%d",
+				hex.EncodeToString(buf[:]), &ep, i%4)
 		}
 	}
 }
