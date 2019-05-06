@@ -26,7 +26,7 @@ type ProjectivePoint struct {
 func (p *ExtendedPoint) SetTorsion3() *ExtendedPoint {
 	p.X.Set(&feMinusI)
 	p.Y.SetZero()
-	p.Z.Set(&feMinusI)
+	p.Z.Set(&feOne)
 	p.T.SetZero()
 	return p
 }
@@ -35,7 +35,7 @@ func (p *ExtendedPoint) SetTorsion3() *ExtendedPoint {
 func (p *ExtendedPoint) SetTorsion2() *ExtendedPoint {
 	p.X.Set(&feI)
 	p.Y.SetZero()
-	p.Z.Set(&feI)
+	p.Z.Set(&feOne)
 	p.T.SetZero()
 	return p
 }
@@ -44,7 +44,7 @@ func (p *ExtendedPoint) SetTorsion2() *ExtendedPoint {
 func (p *ExtendedPoint) SetTorsion1() *ExtendedPoint {
 	p.X.SetZero()
 	p.Y.Set(&feMinusOne)
-	p.Z.Set(&feMinusOne)
+	p.Z.Set(&feOne)
 	p.T.SetZero()
 	return p
 }
