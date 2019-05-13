@@ -87,7 +87,7 @@ and [Mike Hamburg](https://www.shiftleft.org).
 Changes
 -------
 
-### 1.1.0 (unreleased)
+### 1.1.0 (13-05-2019)
 
 - Add support for the Lizard 16-bytes-to-point-injection.
   See  `ristretto.Point.`{`SetLizard()`, `Lizard()`,`LizardInto()`}.
