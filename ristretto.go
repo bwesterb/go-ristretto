@@ -219,9 +219,13 @@ func (p *Point) Derive(buf []byte) *Point {
 //    distributed with n=2^128 and p=2^-122.192... For such large n, the Poisson
 //    distribution with lambda=n*p=56 is a  very good approximation.  In fact:
 //    the cumulative distribution function (CDF) of the Poission distribution
-//    is larger than that of the binomial distribution for k > lambda.  The value
+//    is larger than that of the binomial distribution for k > lambda.[1]  The value
 //    of the former on k=80 is larger than 0.999 and so with a probability of 99.9%,
 //    there are fewer than 80 bad inputs.
+//
+//  [1] See "Some Inequalities Among Binomial and Poisson Probabilities"
+//      by Anderson and Samuels in Proc. Fifth Berkeley Symp. on
+//      Math. Statist. and Prob., Vol. 1 (Univ. of Calif. Press, 1967).
 func (p *Point) SetLizard(data *[16]byte) *Point {
 	var fe edwards25519.FieldElement
 	var cp edwards25519.CompletedPoint
