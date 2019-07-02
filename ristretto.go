@@ -202,8 +202,26 @@ func (p *Point) Derive(buf []byte) *Point {
 //  - If you want to derive a Point from data, but you do not care about
 //    decoding the data back from the point, you should use
 //    the Point.Derive() method instead.
-//  - There are probably around 8 inputs to SetLizard() which cannot
-//    be decoded.  The chance that you hit such an input is around 1 in 2^125.
+//  - There are some (and with high probability at most 80) inputs to
+//    SetLizard() which cannot be decoded.  The chance that you hit such
+//    an input is around 1 in 2^122.
+//
+//    In Lizard there are 256 - 128 - 3 = 125 check bits to pick out the
+//    right preimage among at most eight.  Conservatively assuming there are
+//    seven other preimages, the chance that one of them passes the check as
+//    well is given by:
+//
+//      1 - (1 - 2^-125)^7 =  7*2^-125 + 21*2^-250 - ...
+//                         =~ 2^(-125 - 2log(7))
+//                         =  2^-122.192...
+//
+//    Presuming a random hash function, the number of "bad" inputs is binomially
+//    distributed with n=2^128 and p=2^-122.192... For such large n, the Poisson
+//    distribution with lambda=n*p=56 is a  very good approximation.  In fact:
+//    the cumulative distribution function (CDF) of the Poission distribution
+//    is larger than that of the binomial distribution for k > lambda.  The value
+//    of the former on k=80 is larger than 0.999 and so with a probability of 99.9%,
+//    there are fewer than 80 bad inputs.
 func (p *Point) SetLizard(data *[16]byte) *Point {
 	var fe edwards25519.FieldElement
 	var cp edwards25519.CompletedPoint
