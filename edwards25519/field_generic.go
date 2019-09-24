@@ -1,4 +1,4 @@
-// +build !amd64,!go1.12 forcegeneric
+// +build !amd64,!go1.13 forcegeneric
 
 package edwards25519
 

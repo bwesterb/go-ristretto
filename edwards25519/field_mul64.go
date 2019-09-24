@@ -1,4 +1,4 @@
-// +build go1.12,!forcegeneric
+// +build go1.13,!forcegeneric
 
 package edwards25519
 

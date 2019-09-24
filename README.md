@@ -87,6 +87,11 @@ and [Mike Hamburg](https://www.shiftleft.org).
 Changes
 -------
 
+### 1.1.1 (24-09-2019)
+
+- Only use bits.Add64 from Go 1.13 onwards to make sure we're constant-time
+  on non-amd64 platforms.  Thanks @Yawning; see issue #17.
+
 ### 1.1.0 (13-05-2019)
 
 - Add support for the Lizard 16-bytes-to-point-injection.
