@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	// Requires for FieldElement.[Set]BigInt().  Obviously not used for actual
+	// Required for FieldElement.[Set]BigInt().  Obviously not used for actual
 	// implementation, as operations on big.Ints are  not constant-time.
 	"math/big"
 )
