@@ -14,6 +14,12 @@
 //     var c ristretto.Point
 //     c.Add(&a, &b) // sets c to a + b
 //
+// Warning: contrary to math.Big's interface, an uninitialized  Point is not
+// the same thing as the zero (neutral element) of the group:
+//
+//     var c ristretto.Point // c is uninitialized now --- not zero!
+//     c.SetZero() // c is zero now; ready to use!
+//
 // Most methods return the receiver, so that function can be chained:
 //
 //     s.Add(&a, &b).Add(&s, &c)  // sets s to a + b + c
@@ -39,6 +45,9 @@ import (
 )
 
 // Represents an element of the Ristretto group over Edwards25519.
+//
+// Warning: an uninitialized Point is not the same thing as a zero.  Use
+// the SetZero() method to set an (uninitialized) Point to zero.
 type Point edwards25519.ExtendedPoint
 
 // A table to speed up scalar multiplication of a fixed point
