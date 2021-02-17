@@ -247,7 +247,9 @@ func TestIssue14(t *testing.T) {
 	tmp, _ = base64.StdEncoding.DecodeString(
 		"SqbtfZl5+A1RtHVfzN8HJCLUcC0Bz2kdThR7wRCUbCQ=")
 	copy(buf[:], tmp)
-	p1.SetBytes(&buf)
+	if !p1.SetBytes(&buf) {
+		t.Fatal()
+	}
 
 	p2.ScalarMultBase(&s)
 

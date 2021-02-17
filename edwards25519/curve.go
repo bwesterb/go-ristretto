@@ -3,6 +3,7 @@
 package edwards25519
 
 import (
+	"crypto/subtle"
 	"encoding/hex"
 	"fmt"
 )
@@ -224,9 +225,15 @@ func (p *ExtendedPoint) SetRistretto(buf *[32]byte) bool {
 	var s, s2, chk, yDen, yNum, yDen2, xDen2, isr, xDenInv FieldElement
 	var yDenInv, t FieldElement
 	var b, ret int32
+	var buf2 [32]byte
 
 	s.SetBytes(buf)
-	ret = s.IsNegativeI()
+
+	// ensures 0 ≤ s < 2^255-19
+	s.BytesInto(&buf2)
+	ret = int32(1 - subtle.ConstantTimeCompare(buf[:], buf2[:]))
+	ret |= int32(buf2[0] & 1) // ensure s is positive
+
 	s2.Square(&s)
 	yDen.add(&feOne, &s2)
 	yNum.sub(&feOne, &s2)
