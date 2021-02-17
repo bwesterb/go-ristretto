@@ -90,6 +90,9 @@ Changes
 ### 1.2.0 (unreleased)
 
 - Add Point.Double().  See issue #21.
+- To align more closely with the RFC, Point.SetBytes()
+  and Point.UnmarshalBinary() will now reject points with non-canonical
+  encodings.  See #20.
 
 ### 1.1.1 (24-09-2019)
 
