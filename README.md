@@ -87,6 +87,10 @@ and [Mike Hamburg](https://www.shiftleft.org).
 Changes
 -------
 
+### 1.2.0 (unreleased)
+
+- Add Point.Double().  See issue #21.
+
 ### 1.1.1 (24-09-2019)
 
 - Only use bits.Add64 from Go 1.13 onwards to make sure we're constant-time

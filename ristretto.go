@@ -77,6 +77,12 @@ func (p *Point) Add(q, r *Point) *Point {
 	return p
 }
 
+// Sets p to q + q.  Returns p.
+func (p *Point) Double(q *Point) *Point {
+	p.e().Double(q.e())
+	return p
+}
+
 // Sets p to q - r.  Returns p.
 func (p *Point) Sub(q, r *Point) *Point {
 	p.e().Sub(q.e(), r.e())
