@@ -138,7 +138,7 @@ func (p *Point) ScalarMultTable(t *ScalarMultTable, s *Scalar) *Point {
 // Sets p to s * q, where q is the point for which the table t was
 // computed. Returns p.
 //
-// Warning: this method uses a non-constant time inmplementation and thus leaks
+// Warning: this method uses a non-constant time implementation and thus leaks
 // information about s.  Use this function only if s is public knowledge.
 func (p *Point) PublicScalarMultTable(t *ScalarMultTable, s *Scalar) *Point {
 	var buf [32]byte
@@ -157,7 +157,7 @@ func (p *Point) ScalarMult(q *Point, s *Scalar) *Point {
 
 // Sets p to s * q assuming s is *not* secret.  Returns p.
 //
-// Warning: this method uses a non-constant time inmplementation and thus leaks
+// Warning: this method uses a non-constant time implementation and thus leaks
 // information about s.  Use this function only if s is public knowledge.
 func (p *Point) PublicScalarMult(q *Point, s *Scalar) *Point {
 	var buf [32]byte
@@ -168,7 +168,7 @@ func (p *Point) PublicScalarMult(q *Point, s *Scalar) *Point {
 
 // Sets p to s * B, where B is the edwards25519 basepoint. Returns p.
 //
-// Warning: this method uses a non-constant time inmplementation and thus leaks
+// Warning: this method uses a non-constant time implementation and thus leaks
 // information about s.  Use this function only if s is public knowledge.
 func (p *Point) PublicScalarMultBase(s *Scalar) *Point {
 	var buf [32]byte
