@@ -87,7 +87,7 @@ and [Mike Hamburg](https://www.shiftleft.org).
 Changes
 -------
 
-### 1.2.3 (unreleased)
+### 1.2.3 (16-03-2023)
 - Panic when reading randomness fails.
 
 ### 1.2.2 (29-07-2022)
