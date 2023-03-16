@@ -677,7 +677,9 @@ func (s *Scalar) SetReduced(t *[64]byte) *Scalar {
 // Sets s to a random scalar.  Returns s.
 func (s *Scalar) Rand() *Scalar {
 	var buf [64]byte
-	rand.Read(buf[:])
+	if _, err := rand.Read(buf[:]); err != nil {
+		panic(err)
+	}
 	return s.SetReduced(&buf)
 }
 

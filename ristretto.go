@@ -188,7 +188,9 @@ func (p *Point) ScalarMultBase(s *Scalar) *Point {
 // Sets p to a random point.  Returns p.
 func (p *Point) Rand() *Point {
 	var buf [32]byte
-	rand.Read(buf[:])
+	if _, err := rand.Read(buf[:]); err != nil {
+		panic(err)
+	}
 	return p.SetElligator(&buf)
 }
 
