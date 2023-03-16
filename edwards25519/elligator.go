@@ -266,7 +266,8 @@ func (p *CompletedPoint) SetRistrettoElligator2(r0 *FieldElement) *CompletedPoin
 }
 
 // WARNING This operation is not constant-time.  Do not use for cryptography
-//         unless you're sure this is not an issue.
+//
+//	unless you're sure this is not an issue.
 func (p *JacobiPoint) String() string {
 	return fmt.Sprintf("JacobiPoint(%v, %v)", p.S, p.T)
 }

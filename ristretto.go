@@ -11,18 +11,18 @@
 // The Point type represents a group element.  The API mimics that of the
 // math/big package.  For instance, to set c to a+b, one writes
 //
-//     var c ristretto.Point
-//     c.Add(&a, &b) // sets c to a + b
+//	var c ristretto.Point
+//	c.Add(&a, &b) // sets c to a + b
 //
 // Warning: contrary to math.Big's interface, an uninitialized  Point is not
 // the same thing as the zero (neutral element) of the group:
 //
-//     var c ristretto.Point // c is uninitialized now --- not zero!
-//     c.SetZero() // c is zero now; ready to use!
+//	var c ristretto.Point // c is uninitialized now --- not zero!
+//	c.SetZero() // c is zero now; ready to use!
 //
 // Most methods return the receiver, so that function can be chained:
 //
-//     s.Add(&a, &b).Add(&s, &c)  // sets s to a + b + c
+//	s.Add(&a, &b).Add(&s, &c)  // sets s to a + b + c
 //
 // The order of the Ristretto group is l =
 // 2^252 + 27742317777372353535851937790883648493 =
@@ -213,36 +213,38 @@ func (p *Point) Derive(buf []byte) *Point {
 //
 // Notes on usage:
 //
-//  - If you want to create a Point from random data, you should rather
-//    create a random Point with Point.Rand() and then use (a hash of)
-//    Point.Bytes() as the random data.
-//  - If you want to derive a Point from data, but you do not care about
-//    decoding the data back from the point, you should use
-//    the Point.Derive() method instead.
-//  - There are some (and with high probability at most 80) inputs to
-//    SetLizard() which cannot be decoded.  The chance that you hit such
-//    an input is around 1 in 2^122.
+//   - If you want to create a Point from random data, you should rather
+//     create a random Point with Point.Rand() and then use (a hash of)
+//     Point.Bytes() as the random data.
 //
-//    In Lizard there are 256 - 128 - 3 = 125 check bits to pick out the
-//    right preimage among at most eight.  Conservatively assuming there are
-//    seven other preimages, the chance that one of them passes the check as
-//    well is given by:
+//   - If you want to derive a Point from data, but you do not care about
+//     decoding the data back from the point, you should use
+//     the Point.Derive() method instead.
 //
-//      1 - (1 - 2^-125)^7 =  7*2^-125 + 21*2^-250 - ...
-//                         =~ 2^(-125 - 2log(7))
-//                         =  2^-122.192...
+//   - There are some (and with high probability at most 80) inputs to
+//     SetLizard() which cannot be decoded.  The chance that you hit such
+//     an input is around 1 in 2^122.
 //
-//    Presuming a random hash function, the number of "bad" inputs is binomially
-//    distributed with n=2^128 and p=2^-122.192... For such large n, the Poisson
-//    distribution with lambda=n*p=56 is a  very good approximation.  In fact:
-//    the cumulative distribution function (CDF) of the Poission distribution
-//    is larger than that of the binomial distribution for k > lambda.[1]  The value
-//    of the former on k=80 is larger than 0.999 and so with a probability of 99.9%,
-//    there are fewer than 80 bad inputs.
+//     In Lizard there are 256 - 128 - 3 = 125 check bits to pick out the
+//     right preimage among at most eight.  Conservatively assuming there are
+//     seven other preimages, the chance that one of them passes the check as
+//     well is given by:
 //
-//  [1] See "Some Inequalities Among Binomial and Poisson Probabilities"
-//      by Anderson and Samuels in Proc. Fifth Berkeley Symp. on
-//      Math. Statist. and Prob., Vol. 1 (Univ. of Calif. Press, 1967).
+//     1 - (1 - 2^-125)^7 =  7*2^-125 + 21*2^-250 - ...
+//     =~ 2^(-125 - 2log(7))
+//     =  2^-122.192...
+//
+//     Presuming a random hash function, the number of "bad" inputs is binomially
+//     distributed with n=2^128 and p=2^-122.192... For such large n, the Poisson
+//     distribution with lambda=n*p=56 is a  very good approximation.  In fact:
+//     the cumulative distribution function (CDF) of the Poission distribution
+//     is larger than that of the binomial distribution for k > lambda.[1]  The value
+//     of the former on k=80 is larger than 0.999 and so with a probability of 99.9%,
+//     there are fewer than 80 bad inputs.
+//
+//     [1] See "Some Inequalities Among Binomial and Poisson Probabilities"
+//     by Anderson and Samuels in Proc. Fifth Berkeley Symp. on
+//     Math. Statist. and Prob., Vol. 1 (Univ. of Calif. Press, 1967).
 func (p *Point) SetLizard(data *[16]byte) *Point {
 	var fe edwards25519.FieldElement
 	var cp edwards25519.CompletedPoint

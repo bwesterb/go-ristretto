@@ -426,14 +426,16 @@ func (p *ExtendedPoint) RistrettoEqualsI(q *ExtendedPoint) int32 {
 }
 
 // WARNING This operation is not constant-time.  Do not use for cryptography
-//         unless you're sure this is not an issue.
+//
+//	unless you're sure this is not an issue.
 func (p *ExtendedPoint) String() string {
 	return fmt.Sprintf("ExtendedPoint(%v, %v, %v, %v; %v)",
 		p.X, p.Y, p.Z, p.T, hex.EncodeToString(p.Ristretto()))
 }
 
 // WARNING This operation is not constant-time.  Do not use for cryptography
-//         unless you're sure this is not an issue.
+//
+//	unless you're sure this is not an issue.
 func (p *CompletedPoint) String() string {
 	var ep ExtendedPoint
 	ep.SetCompleted(p)

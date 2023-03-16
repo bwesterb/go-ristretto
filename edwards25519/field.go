@@ -162,7 +162,8 @@ func (fe *FieldElement) Equals(a *FieldElement) bool {
 // Returns fe as a big.Int.
 //
 // WARNING Operations on big.Ints are not constant-time: do not use them
-//         for cryptography unless you're sure this is not an issue.
+//
+//	for cryptography unless you're sure this is not an issue.
 func (fe *FieldElement) BigInt() *big.Int {
 	var ret big.Int
 	var buf, rBuf [32]byte
@@ -176,7 +177,8 @@ func (fe *FieldElement) BigInt() *big.Int {
 // Writes fe as a string for debugging.
 //
 // WARNING This operation is not constant-time.  Do not use for cryptography
-//         unless you're sure this is not an issue.
+//
+//	unless you're sure this is not an issue.
 func (fe FieldElement) String() string {
 	return fe.BigInt().String()
 }
@@ -184,7 +186,8 @@ func (fe FieldElement) String() string {
 // Sets fe to x modulo 2^255-19.
 //
 // WARNING Operations on big.Ints are not constant-time: do not use them
-//         for cryptography unless you're sure this is not an issue.
+//
+//	for cryptography unless you're sure this is not an issue.
 func (fe *FieldElement) SetBigInt(x *big.Int) *FieldElement {
 	var v, bi25519 big.Int
 	bi25519.SetString(

@@ -1,3 +1,4 @@
+//go:build (!amd64 && !go1.13) || forcegeneric
 // +build !amd64,!go1.13 forcegeneric
 
 package edwards25519
