@@ -88,6 +88,31 @@ func (s *Scalar) SetBytes(x *[32]byte) *Scalar {
 	return s.Sub(s, &scL)
 }
 
+// Sets s to x, where x is interpreted little endian, iff x is reduced mod l.
+//
+// Returns whether x was reduced.
+func (s *Scalar) SetBytesStrict(x *[32]byte) bool {
+	var t, r Scalar
+	t[0] = load4u32(x[0:])
+	t[1] = load4u32(x[4:])
+	t[2] = load4u32(x[8:])
+	t[3] = load4u32(x[12:])
+	t[4] = load4u32(x[16:])
+	t[5] = load4u32(x[20:])
+	t[6] = load4u32(x[24:])
+	t[7] = load4u32(x[28:])
+
+	// Sub adds l back only when the subtraction underflows, i.e. when t < l.
+	// Hence r == t exactly when t is already reduced and x is canonical.
+	r.Sub(&t, &scL)
+	if r != t {
+		return false
+	}
+
+	*s = t
+	return true
+}
+
 // Sets s to -a.  Returns s.
 func (s *Scalar) Neg(a *Scalar) *Scalar {
 	return s.Sub(&scZero, a)
@@ -1008,7 +1033,11 @@ func (s *Scalar) Equals(a *Scalar) bool {
 	return b.Sub(s, a).IsNonZeroI() == 0
 }
 
-// Implements encoding/BinaryUnmarshaler. Use SetBytes, if convenient, instead.
+// Implements encoding/BinaryUnmarshaler.
+//
+// Performs essentially the same as SetBytes. Note that it does not check
+// whether the scalar is reduced as advised by the RFC. For that use
+// the SetBytesStrict function instead.
 func (s *Scalar) UnmarshalBinary(data []byte) error {
 	if len(data) != 32 {
 		return fmt.Errorf("ristretto.Scalar should be 32 bytes; not %d", len(data))

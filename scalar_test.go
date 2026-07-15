@@ -191,6 +191,61 @@ func TestScReduced(t *testing.T) {
 
 }
 
+func TestScSetBytesStrict(t *testing.T) {
+	// Little-endian encode a big.Int into a [32]byte.
+	le := func(bi *big.Int) (buf [32]byte) {
+		b := bi.Bytes() // big-endian
+		for j := 0; j < len(b) && j < 32; j++ {
+			buf[j] = b[len(b)-j-1]
+		}
+		return
+	}
+
+	var s, s2 ristretto.Scalar
+	var bi, bi2, twoTo256 big.Int
+	twoTo256.SetInt64(1).Lsh(&twoTo256, 256)
+
+	// Canonical encodings (0 <= s < l) must be accepted and decode correctly.
+	for i := 0; i < 100; i++ {
+		bi.Rand(rnd, &biL)
+		buf := le(&bi)
+		if !s.SetBytesStrict(&buf) {
+			t.Fatalf("SetBytesStrict(%v) unexpectedly rejected", &bi)
+		}
+		s2.SetBigInt(&bi)
+		if !s.Equals(&s2) {
+			t.Fatalf("SetBytesStrict(%v) = %v != %v", &bi, s.BigInt(), &bi)
+		}
+	}
+
+	// l itself and l+1 are the smallest non-canonical encodings.
+	for _, d := range []int64{0, 1} {
+		bi.SetInt64(d).Add(&bi, &biL)
+		buf := le(&bi)
+		if s.SetBytesStrict(&buf) {
+			t.Fatalf("SetBytesStrict(%v) should have been rejected", &bi)
+		}
+	}
+
+	// Random non-canonical encodings (l <= s < 2^256) must be rejected, and
+	// s must be left unchanged.
+	bi2.Sub(&twoTo256, &biL) // size of the non-canonical range
+	for i := 0; i < 100; i++ {
+		bi.Rand(rnd, &bi2)
+		bi.Add(&bi, &biL) // now l <= bi < 2^256
+		buf := le(&bi)
+		var before ristretto.Scalar
+		before.Rand()
+		s = before
+		if s.SetBytesStrict(&buf) {
+			t.Fatalf("SetBytesStrict(%v) should have been rejected", &bi)
+		}
+		if !s.Equals(&before) {
+			t.Fatalf("SetBytesStrict left s modified on rejection")
+		}
+	}
+}
+
 func TestScTextMarshaling(t *testing.T) {
 	var s, s2 ristretto.Scalar
 	for i := 0; i < 100; i++ {

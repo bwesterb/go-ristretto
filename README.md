@@ -87,6 +87,10 @@ and [Mike Hamburg](https://www.shiftleft.org).
 Changes
 -------
 
+### 1.2.4 (unpublished)
+- Add Scalar.SetBytesStrict() that checks whether the scalar is reduced
+  as recommended by the RFC.
+
 ### 1.2.3 (16-03-2023)
 - Panic when reading randomness fails.
 
