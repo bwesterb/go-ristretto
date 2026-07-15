@@ -87,7 +87,7 @@ and [Mike Hamburg](https://www.shiftleft.org).
 Changes
 -------
 
-### 1.2.4 (unpublished)
+### 1.2.4 (16-07-2026)
 - Add Scalar.SetBytesStrict() that checks whether the scalar is reduced
   as recommended by the RFC.
 
